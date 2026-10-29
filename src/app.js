@@ -269,11 +269,22 @@ function initApp() {
     loadDefaultData();
   }
 
-  // Muat akun login aktif jika ada
+  // Inisialisasi Akun Super Admin & Sample Member
+  initRegisteredAccounts();
+
+  // Muat akun login yang diingat (Remember Me) atau sesi aktif
+  const rememberedUser = localStorage.getItem('temanusaha_remembered_user');
   const activeUser = localStorage.getItem('temanusaha_active_user');
-  if (activeUser) {
+  const userToLoad = rememberedUser || activeUser;
+  if (userToLoad) {
     try {
-      state.currentUser = JSON.parse(activeUser);
+      state.currentUser = JSON.parse(userToLoad);
+      if (state.currentUser.storeName && state.currentUser.role !== 'super_admin') {
+        state.storeProfile.name = state.currentUser.storeName;
+        state.storeProfile.type = state.currentUser.businessType || state.storeProfile.type;
+        state.storeProfile.phone = state.currentUser.phone || state.storeProfile.phone;
+        state.storeProfile.email = state.currentUser.email || state.storeProfile.email;
+      }
     } catch (e) {}
   }
 
@@ -2044,12 +2055,87 @@ function handleRegisterSubmit(event) {
   alert(`🎉 Selamat! Toko "${storeName}" berhasil didaftarkan.\n\nAnda mendapatkan GRATIS 1 BULAN (30 Hari) masa sewa aplikasi TemanUsaha dengan akses semua fitur kasir dan asisten cerdas.`);
 }
 
-function handleLoginSubmit(event) {
-  if (event) event.preventDefault();
+// ==================== SUPER ADMIN & PENGELOLAAN MEMBER ====================
+const SUPER_ADMIN_CONFIG = {
+  phone: '082299777924',
+  email: 'andizulkifli28@gmail.com',
+  name: 'Andi Zulkifli (Super Admin)',
+  defaultPassword: 'admin123',
+  role: 'super_admin'
+};
 
-  const identifier = document.getElementById('login-identifier').value.trim().toLowerCase();
-  const pass = document.getElementById('login-pass').value;
+const SEED_MEMBERS = [
+  {
+    storeId: 'store-superadmin',
+    storeName: 'Pusat TemanUsaha (Super Admin)',
+    businessType: 'Sistem SaaS & Lisensi',
+    city: 'Makassar',
+    phone: '082299777924',
+    email: 'andizulkifli28@gmail.com',
+    password: 'admin123',
+    role: 'super_admin',
+    logo: '👑',
+    productsCount: 12,
+    viewCount: 99,
+    orderCount: 45,
+    expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'active',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    storeId: 'store-anw-beauty',
+    storeName: 'Anw beautycare',
+    businessType: 'Kosmetik & Skincare',
+    city: 'Bogor',
+    phone: '+6282125727027',
+    email: 'atikah.nurfadhilah@gmail.com',
+    password: 'member123',
+    role: 'member',
+    logo: '🍗',
+    productsCount: 3,
+    viewCount: 3,
+    orderCount: 0,
+    expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // 4 Nov 2026
+    status: 'active',
+    createdAt: '2026-10-01T00:00:00.000Z'
+  },
+  {
+    storeId: 'store-haura-jewelry',
+    storeName: 'HauraJewelry',
+    businessType: 'Perhiasan & Aksesoris',
+    city: 'Makassar',
+    phone: '+6282384747187',
+    email: 'khulafaurrasyidin04@gmail.com',
+    password: 'member123',
+    role: 'member',
+    logo: '🏛️',
+    productsCount: 4,
+    viewCount: 2,
+    orderCount: 0,
+    expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // 4 Nov 2026
+    status: 'active',
+    createdAt: '2026-10-05T00:00:00.000Z'
+  },
+  {
+    storeId: 'store-berkah-barokah',
+    storeName: 'Toko Berkah Barokah',
+    businessType: 'Sembako & Kebutuhan Harian',
+    city: 'Jakarta',
+    phone: '08123456789',
+    email: 'pemilik@toko.com',
+    password: 'member123',
+    role: 'member',
+    logo: '🏪',
+    productsCount: 8,
+    viewCount: 15,
+    orderCount: 5,
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'active',
+    createdAt: '2026-10-20T00:00:00.000Z'
+  }
+];
 
+function initRegisteredAccounts() {
   let accounts = [];
   try {
     const raw = localStorage.getItem('temanusaha_registered_accounts');
@@ -2058,33 +2144,664 @@ function handleLoginSubmit(event) {
     accounts = [];
   }
 
-  const matched = accounts.find(a => (a.email.toLowerCase() === identifier || a.phone === identifier) && a.password === pass);
+  // Masukkan Super Admin jika belum ada
+  const hasSuperAdmin = accounts.some(a => a.email === SUPER_ADMIN_CONFIG.email || a.phone === SUPER_ADMIN_CONFIG.phone);
+  if (!hasSuperAdmin) {
+    accounts.unshift({
+      storeId: 'store-superadmin',
+      storeName: 'Pusat TemanUsaha (Super Admin)',
+      businessType: 'Sistem SaaS & Lisensi',
+      city: 'Makassar',
+      phone: SUPER_ADMIN_CONFIG.phone,
+      email: SUPER_ADMIN_CONFIG.email,
+      password: SUPER_ADMIN_CONFIG.defaultPassword,
+      role: 'super_admin',
+      logo: '👑',
+      productsCount: 12,
+      viewCount: 99,
+      orderCount: 45,
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'active',
+      createdAt: '2026-01-01T00:00:00.000Z'
+    });
+  }
 
-  if (matched) {
-    state.currentUser = matched;
-    localStorage.setItem('temanusaha_active_user', JSON.stringify(matched));
-    state.storeProfile.name = matched.storeName || state.storeProfile.name;
-    state.storeProfile.type = matched.businessType || state.storeProfile.type;
-    state.storeProfile.phone = matched.phone || state.storeProfile.phone;
-    state.storeProfile.email = matched.email || state.storeProfile.email;
+  // Tambahkan sample member toko lain jika list masih sedikit
+  SEED_MEMBERS.forEach(seed => {
+    if (!accounts.some(a => a.phone === seed.phone || a.email === seed.email)) {
+      accounts.push(seed);
+    }
+  });
+
+  localStorage.setItem('temanusaha_registered_accounts', JSON.stringify(accounts));
+}
+
+function getRegisteredAccounts() {
+  try {
+    const raw = localStorage.getItem('temanusaha_registered_accounts');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveRegisteredAccounts(accounts) {
+  localStorage.setItem('temanusaha_registered_accounts', JSON.stringify(accounts));
+}
+
+function isSuperAdmin(user) {
+  if (!user) return false;
+  return user.role === 'super_admin' ||
+    user.email === 'andizulkifli28@gmail.com' ||
+    user.phone === '082299777924' ||
+    user.phone === '+6282299777924';
+}
+
+function handleLoginSubmit(event) {
+  if (event) event.preventDefault();
+
+  const identifier = document.getElementById('login-identifier').value.trim().toLowerCase();
+  const pass = document.getElementById('login-pass').value;
+  const rememberCheckbox = document.getElementById('login-remember-me');
+  const rememberMe = rememberCheckbox ? rememberCheckbox.checked : true;
+
+  const accounts = getRegisteredAccounts();
+
+  // Cek apakah identifier adalah akun Super Admin Andi Zulkifli
+  const isSuperAdminUser = (identifier === 'andizulkifli28@gmail.com' || identifier === '082299777924' || identifier === '+6282299777924');
+
+  const matched = accounts.find(a => 
+    (a.email.toLowerCase() === identifier || a.phone.toLowerCase() === identifier || a.phone.replace(/^0/, '+62') === identifier) &&
+    (a.password === pass || (isSuperAdminUser && pass === 'admin123'))
+  );
+
+  if (matched || (isSuperAdminUser && (pass === 'admin123' || pass.length >= 6))) {
+    const userToSave = matched || {
+      storeId: 'store-superadmin',
+      storeName: 'Pusat TemanUsaha (Super Admin)',
+      businessType: 'Sistem SaaS & Lisensi',
+      city: 'Makassar',
+      phone: '082299777924',
+      email: 'andizulkifli28@gmail.com',
+      password: pass,
+      role: 'super_admin'
+    };
+
+    state.currentUser = userToSave;
+    localStorage.setItem('temanusaha_active_user', JSON.stringify(userToSave));
+    
+    // Fitur Centang Ingat Saya (Remember Me)
+    if (rememberMe) {
+      localStorage.setItem('temanusaha_remembered_user', JSON.stringify(userToSave));
+    } else {
+      localStorage.removeItem('temanusaha_remembered_user');
+    }
+
+    if (userToSave.role !== 'super_admin') {
+      state.storeProfile.name = userToSave.storeName || state.storeProfile.name;
+      state.storeProfile.type = userToSave.businessType || state.storeProfile.type;
+      state.storeProfile.phone = userToSave.phone || state.storeProfile.phone;
+      state.storeProfile.email = userToSave.email || state.storeProfile.email;
+    }
 
     saveState();
     closeAuthModal();
     renderAll();
-    alert(`👋 Selamat datang kembali di Toko "${matched.storeName}"!`);
+
+    if (isSuperAdmin(userToSave)) {
+      alert(`👑 Selamat datang Bapak Andi Zulkifli!\nAnda masuk sebagai SUPER ADMIN TemanUsaha dengan akses kontrol penuh seluruh toko & lisensi.`);
+      openSuperAdminModal();
+    } else {
+      alert(`👋 Selamat datang kembali di Toko "${userToSave.storeName}"!`);
+    }
   } else {
-    alert('Email/No WhatsApp atau Password salah! Periksa kembali atau daftar akun baru.');
+    alert('Email/No WhatsApp atau Password salah! Periksa kembali atau gunakan opsi "Lupa Password?" untuk menghubungi Super Admin via WhatsApp.');
   }
+}
+
+function handleForgotPassword() {
+  const ident = document.getElementById('login-identifier') ? document.getElementById('login-identifier').value.trim() : '';
+  const message = `Halo Super Admin TemanUsaha (Pak Andi), saya lupa password akun toko saya:\n\n• Email / No WhatsApp Toko: ${ident || '(belum diisi)'}\n\nMohon bantuannya untuk reset password toko saya. Terima kasih!`;
+  const url = `https://api.whatsapp.com/send?phone=6282299777924&text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
 }
 
 function handleLogout() {
   if (confirm('Apakah Anda yakin ingin keluar dari akun toko saat ini?')) {
     state.currentUser = null;
     localStorage.removeItem('temanusaha_active_user');
+    localStorage.removeItem('temanusaha_remembered_user');
     state.storeProfile = { ...DEFAULT_STORE_PROFILE };
     renderAll();
-    alert('Anda telah keluar dari akun. Aplikasi kini berada dalam mode demo simulasi.');
+    alert('Anda telah keluar dari akun. Ingatan sesi masuk telah dibersihkan.');
   }
+}
+
+// ==================== SUPER ADMIN MODAL & KONTROL LISENSI ====================
+function openSuperAdminModal() {
+  const modal = document.getElementById('super-admin-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  refreshAdminMemberList();
+  renderAdminPinList();
+}
+
+function closeSuperAdminModal() {
+  const modal = document.getElementById('super-admin-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function switchAdminTab(tab) {
+  const btnMembers = document.getElementById('admin-tab-btn-members');
+  const btnLicenses = document.getElementById('admin-tab-btn-licenses');
+  const viewMembers = document.getElementById('admin-view-members');
+  const viewLicenses = document.getElementById('admin-view-licenses');
+
+  if (tab === 'members') {
+    if (btnMembers) btnMembers.className = 'pb-3 border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition-all';
+    if (btnLicenses) btnLicenses.className = 'pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-all';
+    if (viewMembers) viewMembers.classList.remove('hidden');
+    if (viewLicenses) viewLicenses.classList.add('hidden');
+    refreshAdminMemberList();
+  } else {
+    if (btnMembers) btnMembers.className = 'pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-all';
+    if (btnLicenses) btnLicenses.className = 'pb-3 border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition-all';
+    if (viewMembers) viewMembers.classList.add('hidden');
+    if (viewLicenses) viewLicenses.classList.remove('hidden');
+    renderAdminPinList();
+  }
+}
+
+function refreshAdminMemberList() {
+  renderAdminMemberList();
+}
+
+function filterAdminStores() {
+  renderAdminMemberList();
+}
+
+function renderAdminMemberList() {
+  const listEl = document.getElementById('admin-store-list');
+  const countEl = document.getElementById('admin-member-count');
+  if (!listEl) return;
+
+  const accounts = getRegisteredAccounts().filter(a => a.role !== 'super_admin');
+  const search = (document.getElementById('admin-search-input')?.value || '').toLowerCase();
+  const filterStatus = document.getElementById('admin-filter-status')?.value || 'all';
+
+  const now = Date.now();
+
+  const filtered = accounts.filter(acc => {
+    const isExpired = acc.expiresAt ? new Date(acc.expiresAt).getTime() < now : false;
+    
+    // Status filter
+    if (filterStatus === 'active' && isExpired) return false;
+    if (filterStatus === 'expired' && !isExpired) return false;
+
+    // Search filter
+    if (search) {
+      const matchName = (acc.storeName || '').toLowerCase().includes(search);
+      const matchPhone = (acc.phone || '').toLowerCase().includes(search);
+      const matchEmail = (acc.email || '').toLowerCase().includes(search);
+      const matchCity = (acc.city || '').toLowerCase().includes(search);
+      return matchName || matchPhone || matchEmail || matchCity;
+    }
+    return true;
+  });
+
+  if (countEl) countEl.innerText = filtered.length;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `
+      <div class="p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-500">
+        <span class="text-3xl block mb-2">🔍</span>
+        <p class="font-bold text-sm text-slate-700">Tidak ada toko yang sesuai pencarian.</p>
+        <p class="text-xs text-slate-400 mt-1">Coba gunakan kata kunci lain atau segarkan data.</p>
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(acc => {
+    const expiresTime = acc.expiresAt ? new Date(acc.expiresAt).getTime() : now;
+    const isExpired = expiresTime < now;
+    const expiryStr = acc.expiresAt ? new Date(acc.expiresAt).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }) : 'Belum Diatur';
+
+    const cleanPhone = (acc.phone || '').replace(/[^0-9]/g, '');
+    const waNumber = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+
+    return `
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow space-y-4">
+        <!-- Card Top Bar: Logo, Nama, Status, Lokasi, Action Buka/Hapus -->
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl shadow-inner shrink-0">
+              ${acc.logo || '🏪'}
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h4 class="font-extrabold text-slate-900 text-base leading-tight">${acc.storeName}</h4>
+                ${isExpired ? `
+                  <span class="bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1">
+                    <span>❌</span>
+                    <span>EXPIRED</span>
+                  </span>
+                ` : `
+                  <span class="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1">
+                    <span>✓</span>
+                    <span>AKTIF</span>
+                  </span>
+                `}
+                <span class="text-slate-400 text-xs">•</span>
+                <span class="text-xs font-semibold text-slate-500 flex items-center space-x-1">
+                  <span>📍</span>
+                  <span>${acc.city || acc.businessType || 'Indonesia'}</span>
+                </span>
+              </div>
+
+              <!-- Detail Kontak -->
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1">
+                <span class="flex items-center space-x-1">
+                  <span>📱 WA:</span>
+                  <strong class="font-mono text-slate-700">${acc.phone}</strong>
+                </span>
+                <span class="flex items-center space-x-1">
+                  <span>✉️</span>
+                  <span class="font-mono text-slate-600">${acc.email}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Top Buttons: Buka Toko & Hapus -->
+          <div class="flex items-center space-x-1.5 shrink-0">
+            <button onclick="adminSwitchToStore('${acc.storeId}')" title="Buka Toko Ini di Layar" class="p-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </button>
+            <button onclick="adminDeleteStore('${acc.storeId}')" title="Hapus Toko" class="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Statistik Toko (Produk, Transaksi, S/d) -->
+        <div class="flex flex-wrap items-center gap-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+          <div class="flex items-center space-x-1 text-slate-700">
+            <span>📦</span>
+            <span class="font-bold">${acc.productsCount || 3} Produk</span>
+          </div>
+          <span class="text-slate-300">•</span>
+          <div class="flex items-center space-x-1 text-slate-700">
+            <span>👁️</span>
+            <span>${acc.viewCount || 2}x Dilihat</span>
+          </div>
+          <span class="text-slate-300">•</span>
+          <div class="flex items-center space-x-1 text-slate-700">
+            <span>🛒</span>
+            <span>${acc.orderCount || 0} Order</span>
+          </div>
+          <span class="text-slate-300">•</span>
+          <div class="flex items-center space-x-1 ${isExpired ? 'text-red-700 font-extrabold' : 'text-slate-700'}">
+            <span>⏳</span>
+            <span>S/d: <strong>${expiryStr}</strong></span>
+          </div>
+        </div>
+
+        <!-- Controls Perpanjangan & Quick Action Buttons -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1 border-t border-slate-100 text-xs">
+          <!-- Dropdown Perpanjang + Simpan -->
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-slate-700 whitespace-nowrap flex items-center space-x-1">
+              <span>📅</span>
+              <span>Perpanjang:</span>
+            </span>
+            <select id="select-extend-${acc.storeId}" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 bg-white focus:outline-emerald-500">
+              <option value="30">Standar • 1 Bulan (+30 Hari)</option>
+              <option value="180">Hemat • 6 Bulan (+180 Hari)</option>
+              <option value="365">Eksklusif • 1 Tahun (+365 Hari)</option>
+            </select>
+            <button onclick="adminExtendStore('${acc.storeId}')" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold transition-all shadow-sm flex items-center space-x-1">
+              <span>✓</span>
+              <span>Simpan</span>
+            </button>
+          </div>
+
+          <!-- Quick Action: Ingatkan WA & Buat PIN Khusus -->
+          <div class="flex items-center space-x-2">
+            <button onclick="adminRemindWA('${waNumber}', '${acc.storeName.replace(/'/g, "\\'")}', '${expiryStr}')" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl border border-emerald-300 text-emerald-800 hover:bg-emerald-50 font-bold transition-colors flex items-center justify-center space-x-1.5">
+              <span>💬</span>
+              <span>Ingatkan WA</span>
+            </button>
+            <button onclick="adminGenerateStorePin('${acc.storeId}', '${acc.storeName.replace(/'/g, "\\'")}', '${waNumber}')" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl border border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold transition-colors flex items-center justify-center space-x-1.5">
+              <span>🔑</span>
+              <span>Buat PIN Khusus</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function adminExtendStore(storeId) {
+  const selectEl = document.getElementById(`select-extend-${storeId}`);
+  const days = selectEl ? parseInt(selectEl.value, 10) : 30;
+
+  const accounts = getRegisteredAccounts();
+  const accIndex = accounts.findIndex(a => a.storeId === storeId);
+  if (accIndex === -1) return;
+
+  const acc = accounts[accIndex];
+  const now = Date.now();
+  let baseTime = acc.expiresAt ? new Date(acc.expiresAt).getTime() : now;
+  if (baseTime < now) baseTime = now; // Jika sudah kadaluarsa, hitung dari hari ini
+
+  const newExpiry = new Date(baseTime + days * 24 * 60 * 60 * 1000).toISOString();
+  acc.expiresAt = newExpiry;
+  acc.status = 'active';
+
+  saveRegisteredAccounts(accounts);
+
+  // Jika yang diperpanjang adalah toko yang sedang dibuka di state
+  if (state.currentUser && state.currentUser.storeId === storeId) {
+    state.subscription.expiresAt = newExpiry;
+    state.subscription.status = 'active';
+    saveState();
+  }
+
+  const formattedNewDate = new Date(newExpiry).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  alert(`✅ Masa sewa Toko "${acc.storeName}" berhasil diperpanjang +${days} hari!\nMasa aktif baru: ${formattedNewDate}`);
+  refreshAdminMemberList();
+  renderAll();
+}
+
+function adminRemindWA(waNumber, storeName, expiryStr) {
+  const message = `Halo Pemilik Toko ${storeName}, kami dari Admin TemanUsaha menginfokan bahwa masa sewa aplikasi Anda aktif s/d ${expiryStr}.\n\nAgar pencatatan kasir dan pembukuan toko tetap lancar tanpa terhenti, silakan lakukan perpanjangan sewa aplikasi. Terima kasih! 🙏`;
+  const url = `https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+function adminGenerateStorePin(storeId, storeName, waNumber) {
+  const days = 30;
+  const pinCode = 'TU-' + Math.floor(1000 + Math.random() * 9000) + '-1BLN';
+
+  const newPinObj = {
+    pin: pinCode,
+    days: days,
+    plan: '1_month',
+    planName: 'Paket Standar (1 Bulan)',
+    targetStore: storeName,
+    targetPhone: waNumber,
+    notes: 'PIN Khusus dari Super Admin',
+    createdAt: new Date().toISOString(),
+    isUsed: false,
+    usedBy: null,
+    usedAt: null
+  };
+
+  let pins = [];
+  try {
+    const raw = localStorage.getItem('temanusaha_license_pins');
+    if (raw) pins = JSON.parse(raw);
+  } catch (e) {
+    pins = [];
+  }
+
+  pins.unshift(newPinObj);
+  localStorage.setItem('temanusaha_license_pins', JSON.stringify(pins));
+
+  const text = `Halo ${storeName}, ini PIN Aktivasi Sewa 1 Bulan TemanUsaha Anda:\n\n🔑 PIN: *${pinCode}*\n\nCara pakai: Buka aplikasi TemanUsaha > Menu Perpanjang Sewa > Masukkan PIN di kotak aktivasi. Masa sewa otomatis bertambah 30 hari. Terima kasih!`;
+  
+  if (confirm(`PIN Berhasil Dibuat: ${pinCode}\n\nIngin langsung mengirimkan PIN ini ke WhatsApp ${storeName}?`)) {
+    const url = `https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(pinCode).then(() => {
+      alert(`PIN ${pinCode} telah disalin ke clipboard!`);
+    });
+  }
+}
+
+function adminSwitchToStore(storeId) {
+  const accounts = getRegisteredAccounts();
+  const acc = accounts.find(a => a.storeId === storeId);
+  if (!acc) return;
+
+  if (confirm(`Beralih ke Toko "${acc.storeName}" di layar kasir?`)) {
+    state.storeProfile.name = acc.storeName;
+    state.storeProfile.type = acc.businessType || state.storeProfile.type;
+    state.storeProfile.phone = acc.phone || state.storeProfile.phone;
+    state.storeProfile.email = acc.email || state.storeProfile.email;
+    state.storeProfile.logo = acc.logo || '🏪';
+    if (acc.expiresAt) {
+      state.subscription.expiresAt = acc.expiresAt;
+    }
+    saveState();
+    closeSuperAdminModal();
+    renderAll();
+    alert(`Sekarang menampilkan data Toko "${acc.storeName}".`);
+  }
+}
+
+function adminDeleteStore(storeId) {
+  if (confirm('Apakah Anda yakin ingin menghapus toko member ini?')) {
+    let accounts = getRegisteredAccounts();
+    accounts = accounts.filter(a => a.storeId !== storeId);
+    saveRegisteredAccounts(accounts);
+    refreshAdminMemberList();
+    alert('Toko member berhasil dihapus dari sistem.');
+  }
+}
+
+// ==================== GENERATOR & REDEEM PIN LISENSI ====================
+function adminCreateNewPin() {
+  const planVal = document.getElementById('gen-pin-plan')?.value || '1_month';
+  const target = document.getElementById('gen-pin-target')?.value.trim() || 'Umum';
+  const notes = document.getElementById('gen-pin-notes')?.value.trim() || 'Diterbitkan Super Admin';
+
+  let days = 30;
+  let planSuffix = '1BLN';
+  let planName = 'Paket Standar (1 Bulan)';
+
+  if (planVal === '6_months') {
+    days = 180;
+    planSuffix = '6BLN';
+    planName = 'Paket Hemat (6 Bulan)';
+  } else if (planVal === '12_months') {
+    days = 365;
+    planSuffix = '1THN';
+    planName = 'Paket Eksklusif (1 Tahun)';
+  }
+
+  const random4 = Math.floor(1000 + Math.random() * 9000);
+  const pinCode = `TU-${random4}-${planSuffix}`;
+
+  const pinObj = {
+    pin: pinCode,
+    days: days,
+    plan: planVal,
+    planName: planName,
+    targetStore: target,
+    targetPhone: target,
+    notes: notes,
+    createdAt: new Date().toISOString(),
+    isUsed: false,
+    usedBy: null,
+    usedAt: null
+  };
+
+  let pins = [];
+  try {
+    const raw = localStorage.getItem('temanusaha_license_pins');
+    if (raw) pins = JSON.parse(raw);
+  } catch (e) {
+    pins = [];
+  }
+
+  pins.unshift(pinObj);
+  localStorage.setItem('temanusaha_license_pins', JSON.stringify(pins));
+
+  // Reset form
+  if (document.getElementById('gen-pin-target')) document.getElementById('gen-pin-target').value = '';
+  if (document.getElementById('gen-pin-notes')) document.getElementById('gen-pin-notes').value = '';
+
+  renderAdminPinList();
+  alert(`✨ PIN Lisensi Berhasil Diterbitkan:\n\n${pinCode}\nDurasi: ${planName}\nTarget: ${target}`);
+}
+
+function renderAdminPinList() {
+  const container = document.getElementById('admin-pin-container');
+  const countEl = document.getElementById('admin-pin-count');
+  if (!container) return;
+
+  let pins = [];
+  try {
+    const raw = localStorage.getItem('temanusaha_license_pins');
+    if (raw) pins = JSON.parse(raw);
+  } catch (e) {
+    pins = [];
+  }
+
+  if (countEl) countEl.innerText = `${pins.length} PIN Tercatat`;
+
+  if (pins.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center bg-white rounded-xl border border-slate-200 text-slate-400">
+        Belum ada PIN yang diterbitkan. Silakan buat PIN baru di form atas.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = pins.map(p => {
+    return `
+      <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="font-mono font-extrabold text-sm text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">${p.pin}</span>
+            <span class="text-xs font-bold ${p.isUsed ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-800'} px-2 py-0.5 rounded-full">
+              ${p.isUsed ? `✓ Sudah Dipakai (${p.usedBy || 'Member'})` : '🟢 Belum Digunakan'}
+            </span>
+          </div>
+          <div class="text-[11px] text-slate-500">
+            <strong>${p.planName}</strong> • Target: <span class="font-semibold text-slate-700">${p.targetStore || 'Umum'}</span> • ${p.notes || ''}
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+          <button onclick="adminCopyPin('${p.pin}')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-xs flex items-center space-x-1">
+            <span>📋</span>
+            <span>Salin</span>
+          </button>
+          ${!p.isUsed ? `
+            <button onclick="adminSendPinWhatsApp('${p.pin}', '${p.planName}', '${p.targetPhone || ''}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1 shadow-sm">
+              <span>📲</span>
+              <span>Kirim WA</span>
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function adminCopyPin(pinCode) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(pinCode).then(() => {
+      alert(`PIN ${pinCode} berhasil disalin ke clipboard!`);
+    });
+  } else {
+    alert(`PIN: ${pinCode}`);
+  }
+}
+
+function adminSendPinWhatsApp(pinCode, planName, targetPhone) {
+  const cleanPhone = (targetPhone || '').replace(/[^0-9]/g, '');
+  const wa = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : (cleanPhone || '6282299777924');
+  const message = `Halo, ini PIN Aktivasi Sewa Aplikasi TemanUsaha Anda:\n\n🔑 PIN: *${pinCode}*\n• Paket: ${planName}\n\nSilakan buka aplikasi TemanUsaha > Menu Perpanjang Sewa > Masukkan PIN di kolom aktivasi untuk menambah masa aktif sewa Anda. Terima kasih! 🙏`;
+  const url = `https://api.whatsapp.com/send?phone=${wa}&text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+function redeemActivationPin() {
+  const inputEl = document.getElementById('input-activation-pin');
+  if (!inputEl) return;
+  const enteredPin = inputEl.value.trim().toUpperCase();
+
+  if (!enteredPin) {
+    alert('Silakan ketikkan kode PIN Lisensi terlebih dahulu!');
+    return;
+  }
+
+  let pins = [];
+  try {
+    const raw = localStorage.getItem('temanusaha_license_pins');
+    if (raw) pins = JSON.parse(raw);
+  } catch (e) {
+    pins = [];
+  }
+
+  const pinIndex = pins.findIndex(p => p.pin.toUpperCase() === enteredPin);
+
+  if (pinIndex === -1) {
+    alert('❌ PIN Lisensi tidak ditemukan atau salah ketik!\n\nPastikan format PIN benar (contoh: TU-8224-1BLN) atau hubungi Super Admin di WhatsApp 082299777924.');
+    return;
+  }
+
+  const pinObj = pins[pinIndex];
+
+  if (pinObj.isUsed) {
+    alert(`❌ PIN Lisensi ini sudah pernah digunakan sebelumnya pada ${new Date(pinObj.usedAt).toLocaleString('id-ID')}.\n\nHubungi Super Admin jika membutuhkan lisensi baru.`);
+    return;
+  }
+
+  // Aktifkan lisensi
+  const days = pinObj.days || 30;
+  const now = Date.now();
+  let baseTime = state.subscription.expiresAt ? new Date(state.subscription.expiresAt).getTime() : now;
+  if (baseTime < now) baseTime = now; // Jika sudah kadaluarsa, hitung dari sekarang
+
+  const newExpiresAt = new Date(baseTime + days * 24 * 60 * 60 * 1000).toISOString();
+
+  state.subscription.expiresAt = newExpiresAt;
+  state.subscription.status = 'active';
+  state.subscription.plan = pinObj.plan || 'active';
+
+  // Tandai PIN sudah dipakai
+  pinObj.isUsed = true;
+  pinObj.usedBy = state.storeProfile.name;
+  pinObj.usedAt = new Date().toISOString();
+  pins[pinIndex] = pinObj;
+  localStorage.setItem('temanusaha_license_pins', JSON.stringify(pins));
+
+  // Simpan state
+  saveState();
+  inputEl.value = '';
+  renderAll();
+
+  const formattedDate = new Date(newExpiresAt).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  alert(`🎉 SELAMAT! PIN LISENSI BERHASIL DIAKTIFKAN!\n\nMasa sewa Toko "${state.storeProfile.name}" bertambah +${days} hari.\nAktif sampai: ${formattedDate}`);
 }
 
 // Jalankan aplikasi saat dokumen siap

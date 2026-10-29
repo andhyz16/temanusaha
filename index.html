@@ -283,6 +283,15 @@
             <span>Daftar / Akun</span>
           </button>
         </div>
+
+        <!-- Tombol Akses Super Admin di Drawer -->
+        <button onclick="openSuperAdminModal(); closeSideMenu();" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-extrabold text-xs flex items-center justify-between shadow-sm transition-all border border-amber-300 mt-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-base">👑</span>
+            <span>Super Admin Dashboard</span>
+          </div>
+          <span class="text-[9px] bg-slate-900 text-amber-300 px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold">Akses Penuh</span>
+        </button>
       </div>
     </aside>
   </div>
@@ -332,6 +341,12 @@
           <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Uang Kas di Laci</span>
           <span id="header-cash-in-hand" class="text-xs font-bold text-emerald-700">Rp 0</span>
         </div>
+
+        <!-- Super Admin Quick Button -->
+        <button onclick="openSuperAdminModal()" id="header-admin-btn" title="Buka Super Admin Dashboard (Akses Penuh)" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-extrabold text-xs shadow-sm transition-all border border-amber-300">
+          <span>👑</span>
+          <span class="hidden sm:inline">Super Admin</span>
+        </button>
 
         <!-- Login / Register Portal Button -->
         <button onclick="openAuthModal()" title="Daftar Akun Baru / Masuk Toko" class="p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center space-x-1 border border-slate-200">
@@ -1216,6 +1231,35 @@
 
       </div>
 
+      <!-- PIN Aktivasi / Lisensi dari Super Admin -->
+      <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 rounded-3xl p-6 border-2 border-dashed border-emerald-300 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-emerald-600/20">
+              🔑
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm sm:text-base">Punya PIN / Kode Lisensi dari Super Admin?</h4>
+              <p class="text-xs text-slate-600">Masukkan PIN perpanjangan yang Anda terima dari WhatsApp Admin untuk aktivasi otomatis.</p>
+            </div>
+          </div>
+          <button type="button" onclick="contactAdminWhatsApp('Beli PIN Lisensi Toko')" class="px-3.5 py-2 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-colors shadow-sm flex items-center space-x-1.5 self-start sm:self-auto">
+            <span>📲</span>
+            <span>Minta PIN ke Admin</span>
+          </button>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-2 max-w-xl">
+          <div class="relative w-full">
+            <input type="text" id="input-activation-pin" placeholder="Contoh: TU-8229-1BLN atau 6 digit PIN" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-mono font-bold tracking-widest text-slate-800 uppercase focus:outline-emerald-500 shadow-inner">
+          </div>
+          <button type="button" onclick="redeemActivationPin()" class="w-full sm:w-auto whitespace-nowrap px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-1.5">
+            <span>⚡</span>
+            <span>Aktifkan Sewa Sekarang</span>
+          </button>
+        </div>
+      </div>
+
       <!-- FAQ & Support note -->
       <div class="p-5 bg-slate-100 rounded-2xl border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="flex items-center space-x-3">
@@ -1406,6 +1450,7 @@
     </div>
   </div>
 
+
   <!-- Modal 2: Tambah Produk Baru -->
   <div id="modal-add-product" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
@@ -1457,6 +1502,7 @@
     </div>
   </div>
 
+
   <!-- Modal 3: Belanja Barang / Tambah Stok -->
   <div id="modal-restock" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
@@ -1489,6 +1535,7 @@
       </button>
     </div>
   </div>
+
 
   <!-- Modal 4: Tambah Bon Piutang Baru -->
   <div id="modal-add-debt" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
@@ -1526,6 +1573,7 @@
       </button>
     </div>
   </div>
+
 
   <!-- Modal 5: Perpanjang Sewa / Pembayaran Modal -->
   <div id="modal-payment" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
@@ -1573,6 +1621,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- ==================== MODAL 6: PORTAL PENDAFTARAN & LOGIN AKUN ==================== -->
   <div id="auth-portal-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
@@ -1696,6 +1745,17 @@
           </div>
         </div>
 
+        <!-- Ingat Saya & Lupa Password -->
+        <div class="flex items-center justify-between text-xs pt-0.5">
+          <label class="flex items-center space-x-2 text-slate-600 cursor-pointer select-none">
+            <input type="checkbox" id="login-remember-me" checked class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
+            <span class="font-medium text-[11px]">Ingat Saya di perangkat ini</span>
+          </label>
+          <button type="button" onclick="handleForgotPassword()" class="text-[11px] text-emerald-700 hover:underline font-semibold">
+            Lupa Password?
+          </button>
+        </div>
+
         <button type="submit" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs transition-colors shadow-md flex items-center justify-center space-x-2">
           <span>🔑</span>
           <span>Masuk ke Toko Saya</span>
@@ -1712,6 +1772,150 @@
       <div class="pt-4 border-t border-slate-100 text-center text-[11px] text-slate-500">
         Tarif perpanjangan sewa: <strong>Rp 20.000 – Rp 30.000 / bulan</strong> (tanpa biaya tersembunyi).
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 7: SUPER ADMIN DASHBOARD (AKSES PENUH) ==================== -->
+  <div id="super-admin-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto flex flex-col max-h-[94vh]">
+      
+      <!-- Dark Super Admin Header -->
+      <div class="bg-slate-950 text-white p-5 sm:p-6 flex items-center justify-between border-b border-slate-800 shrink-0">
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-2xl font-bold shadow-lg shadow-amber-400/25 shrink-0">
+            👑
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="font-extrabold text-lg sm:text-xl text-white tracking-tight">Super Admin Dashboard</h2>
+              <span class="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full tracking-wider">
+                AKSES PENUH
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Kelola semua member, lisensi, dan toko online TemanUsaha</p>
+          </div>
+        </div>
+        <button onclick="closeSuperAdminModal()" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-lg font-bold transition-colors">
+          &times;
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="border-b border-slate-200 bg-white px-5 sm:px-6 flex items-center space-x-6 text-xs font-bold pt-3 shrink-0">
+        <button type="button" onclick="switchAdminTab('members')" id="admin-tab-btn-members" class="pb-3 border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition-all">
+          <span>👥</span>
+          <span>Daftar Toko Member ( <span id="admin-member-count">0</span> )</span>
+        </button>
+        <button type="button" onclick="switchAdminTab('licenses')" id="admin-tab-btn-licenses" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-all">
+          <span>🔑</span>
+          <span>Cetak Lisensi Baru</span>
+        </button>
+      </div>
+
+      <!-- Scrollable Tab Content Container -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-slate-50/50">
+
+        <!-- TAB 1: DAFTAR TOKO MEMBER -->
+        <div id="admin-view-members" class="space-y-4">
+          
+          <!-- Green Header Banner -->
+          <div class="p-4 sm:p-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm sm:text-base">Daftar Toko & Member Aktif</h3>
+              <p class="text-xs text-emerald-800 font-medium">Data realtime langsung dari server Google Firebase</p>
+            </div>
+            <button onclick="refreshAdminMemberList()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center space-x-1.5 self-start sm:self-auto">
+              <span>🔄</span>
+              <span>Segarkan Data</span>
+            </button>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="flex flex-col sm:flex-row items-center gap-2.5">
+            <div class="relative w-full flex-1">
+              <span class="absolute left-3.5 top-2.5 text-slate-400">🔍</span>
+              <input type="text" id="admin-search-input" oninput="filterAdminStores()" placeholder="Cari nama toko, nomor WA, atau email..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium focus:outline-emerald-500 shadow-sm">
+            </div>
+            <select id="admin-filter-status" onchange="filterAdminStores()" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-emerald-500 shadow-sm">
+              <option value="all">Semua Toko</option>
+              <option value="active">✓ Hanya Aktif</option>
+              <option value="expired">❌ Hanya Kadaluarsa</option>
+            </select>
+          </div>
+
+          <!-- Store Member Cards Container -->
+          <div id="admin-store-list" class="space-y-3.5">
+            <!-- Injected via JavaScript -->
+          </div>
+        </div>
+
+        <!-- TAB 2: CETAK LISENSI BARU / PIN -->
+        <div id="admin-view-licenses" class="hidden space-y-6">
+          
+          <!-- Generator Box -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+              <h3 class="font-extrabold text-slate-900 text-base flex items-center space-x-2">
+                <span>🔑</span>
+                <span>Terbitkan PIN / Kode Lisensi Khusus</span>
+              </h3>
+              <p class="text-xs text-slate-500">Super admin dapat mencetak PIN aktivasi sewa dan membagikannya ke member lewat WhatsApp.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Durasi Paket Sewa:</label>
+                <select id="gen-pin-plan" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-emerald-500">
+                  <option value="1_month">Standar • 1 Bulan (+30 Hari)</option>
+                  <option value="6_months">Hemat • 6 Bulan (+180 Hari)</option>
+                  <option value="12_months">Eksklusif • 1 Tahun (+365 Hari)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nomor WA / Nama Toko Target:</label>
+                <input type="text" id="gen-pin-target" placeholder="Contoh: 082125727027 atau Umum" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-emerald-500 font-medium">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Catatan / Keterangan:</label>
+                <input type="text" id="gen-pin-notes" placeholder="Contoh: Transfer BCA Rp 30.000" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-emerald-500">
+              </div>
+            </div>
+
+            <button type="button" onclick="adminCreateNewPin()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs shadow-md transition-colors flex items-center justify-center space-x-2">
+              <span>⚡</span>
+              <span>Terbitkan PIN Lisensi Baru Sekarang</span>
+            </button>
+          </div>
+
+          <!-- List of Active & Generated PINs -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Daftar PIN Lisensi Terbit</h4>
+              <span id="admin-pin-count" class="text-xs text-slate-500 font-semibold">0 PIN Tersedia</span>
+            </div>
+
+            <div id="admin-pin-container" class="space-y-2.5 text-xs">
+              <!-- Injected via JavaScript -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Super Admin Modal Footer -->
+      <div class="p-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span>Login sebagai Super Admin: <strong class="text-slate-800">andizulkifli28@gmail.com (082299777924)</strong></span>
+        </div>
+        <button onclick="closeSuperAdminModal()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition-colors">
+          Tutup Panel
+        </button>
+      </div>
+
     </div>
   </div>
 
