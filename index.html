@@ -264,25 +264,14 @@
       </nav>
 
       <!-- Drawer Footer -->
-      <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-2.5 text-xs shrink-0">
-        <div class="flex items-center justify-between text-slate-500">
-          <span class="text-[11px] font-semibold text-slate-600">Status Akun:</span>
-          <span id="drawer-user-phone" class="text-[10px] text-slate-500 font-mono">Akun Aktif</span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 pt-1">
-          <button onclick="handleLogout(); closeSideMenu();" id="drawer-logout-btn" class="py-2 px-3 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 text-center font-semibold text-[11px] flex items-center justify-center space-x-1">
-            <span>🚪</span>
-            <span>Keluar Toko</span>
-          </button>
-          <button onclick="confirmResetData(); closeSideMenu();" class="py-2 px-3 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-center font-semibold text-[11px] flex items-center justify-center space-x-1">
-            <span>🔄</span>
-            <span>Reset Demo</span>
-          </button>
-        </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-2 text-xs shrink-0">
+        <button onclick="handleLogout(); closeSideMenu();" id="drawer-logout-btn" class="w-full py-2.5 px-3 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 text-center font-bold text-xs flex items-center justify-center space-x-1.5 transition-colors">
+          <span>🚪</span>
+          <span>Keluar Toko</span>
+        </button>
 
         <!-- Tombol Akses Super Admin di Drawer (Khusus Super Admin) -->
-        <button id="drawer-admin-btn" style="display:none;" onclick="openSuperAdminModal(); closeSideMenu();" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-extrabold text-xs flex items-center justify-between shadow-sm transition-all border border-amber-300 mt-2">
+        <button id="drawer-admin-btn" style="display:none;" onclick="openSuperAdminModal(); closeSideMenu();" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-extrabold text-xs flex items-center justify-between shadow-sm transition-all border border-amber-300">
           <div class="flex items-center space-x-2">
             <span class="text-base">👑</span>
             <span>Super Admin Dashboard</span>
@@ -323,21 +312,15 @@
       <div class="flex items-center space-x-2">
         <!-- Subscription Status Badge -->
         <button onclick="selectMenu('subscription')" id="header-subscription-badge" title="Klik untuk lihat masa aktif & paket sewa" class="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold transition-all shadow-sm">
-          <span>⭐</span>
+          <span id="header-subscription-icon">⭐</span>
           <span id="header-subscription-text">Trial 30 Hari</span>
         </button>
 
         <!-- Quick Cash Pill -->
-        <div class="flex flex-col items-end px-3 py-1 bg-slate-100 rounded-lg border border-slate-200">
-          <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Uang Kas di Laci</span>
+        <div class="flex flex-col items-end px-3 py-1 bg-slate-100 rounded-lg border border-slate-200 cursor-pointer" onclick="selectMenu('dashboard')" title="Uang Kas di Laci">
+          <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Kas di Laci</span>
           <span id="header-cash-in-hand" class="text-xs font-bold text-emerald-700">Rp 0</span>
         </div>
-
-        <!-- Super Admin Quick Button (Khusus Super Admin) -->
-        <button onclick="openSuperAdminModal()" id="header-admin-btn" style="display:none;" title="Buka Super Admin Dashboard (Akses Penuh)" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-extrabold text-xs shadow-sm transition-all border border-amber-300">
-          <span>👑</span>
-          <span class="hidden sm:inline">Super Admin</span>
-        </button>
       </div>
     </div>
   </header>
@@ -754,7 +737,7 @@
 
         <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 shadow-sm flex items-center justify-between">
           <div>
-            <span class="text-[11px] font-bold text-emerald-800 uppercase">Bantuan Tagih Sopan</span>
+            <span class="text-[11px] font-bold text-emerald-800 uppercase">Pengingat Tagihan WA</span>
             <p class="text-xs text-slate-600 mt-0.5">Draf pesan santun menjaga hubungan baik & silaturahmi</p>
           </div>
           <button onclick="openAddDebtModal()" class="text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg">
@@ -768,7 +751,7 @@
         <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h3 class="font-bold text-slate-900 text-base">Daftar Pelanggan yang Memiliki Bon / Piutang</h3>
-            <p class="text-xs text-slate-500">Klik tombol "Kirim WA Sopan" untuk membuat pesan pengingat ramah tanpa rasa canggung</p>
+            <p class="text-xs text-slate-500">Klik tombol "Ingatkan via WA" untuk membuat pesan tagihan ramah dan profesional</p>
           </div>
         </div>
 
@@ -1116,7 +1099,7 @@
               </li>
               <li class="flex items-center space-x-2">
                 <span class="text-emerald-600 font-bold">✓</span>
-                <span>Buku piutang & tombol kirim WA sopan</span>
+                <span>Buku piutang & pengingat tagihan WhatsApp</span>
               </li>
               <li class="flex items-center space-x-2">
                 <span class="text-emerald-600 font-bold">✓</span>
@@ -1216,43 +1199,18 @@
 
       </div>
 
-      <!-- PIN Aktivasi / Lisensi dari Super Admin -->
-      <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 rounded-3xl p-6 border-2 border-dashed border-emerald-300 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-emerald-600/20">
-              🔑
-            </div>
-            <div>
-              <h4 class="font-extrabold text-slate-900 text-sm sm:text-base">Punya PIN / Kode Lisensi dari Super Admin?</h4>
-              <p class="text-xs text-slate-600">Masukkan PIN perpanjangan yang Anda terima dari WhatsApp Admin untuk aktivasi otomatis.</p>
-            </div>
-          </div>
-          <button type="button" onclick="contactAdminWhatsApp('Beli PIN Lisensi Toko')" class="px-3.5 py-2 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-colors shadow-sm flex items-center space-x-1.5 self-start sm:self-auto">
-            <span>📲</span>
-            <span>Minta PIN ke Admin</span>
-          </button>
-        </div>
-
-        <div class="flex flex-col sm:flex-row items-center gap-2 max-w-xl">
-          <div class="relative w-full">
-            <input type="text" id="input-activation-pin" placeholder="Contoh: TU-8229-1BLN atau 6 digit PIN" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-mono font-bold tracking-widest text-slate-800 uppercase focus:outline-emerald-500 shadow-inner">
-          </div>
-          <button type="button" onclick="redeemActivationPin()" class="w-full sm:w-auto whitespace-nowrap px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-1.5">
-            <span>⚡</span>
-            <span>Aktifkan Sewa Sekarang</span>
-          </button>
-        </div>
-      </div>
-
       <!-- FAQ & Support note -->
-      <div class="p-5 bg-slate-100 rounded-2xl border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 text-xs text-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="flex items-center space-x-3">
           <span class="text-2xl">💬</span>
-          <p>Butuh bantuan perpanjangan sewa atau ingin bayar via QRIS/Transfer Bank? Admin siap membantu Anda lewat WhatsApp.</p>
+          <div>
+            <div class="font-extrabold text-slate-900 text-sm">Butuh Perpanjangan Sewa Toko?</div>
+            <p class="text-xs text-slate-600">Hubungi Super Admin via WhatsApp (082299777924) untuk konfirmasi perpanjangan sewa akun Anda.</p>
+          </div>
         </div>
-        <button onclick="contactAdminWhatsApp('Bantuan Pembayaran Sewa')" class="whitespace-nowrap px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs shadow-sm">
-          Hubungi Admin via WA
+        <button onclick="contactAdminWhatsApp('Bantuan Perpanjangan Sewa')" class="whitespace-nowrap px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center space-x-1.5">
+          <span>📲</span>
+          <span>Hubungi Admin (082299777924)</span>
         </button>
       </div>
 
@@ -1411,19 +1369,19 @@
 
   <!-- ==================== MODALS ==================== -->
 
-  <!-- Modal 1: Kirim WA Sopan untuk Piutang -->
+  <!-- Modal 1: Pengingat Tagihan WA untuk Piutang -->
   <div id="modal-wa-reminder" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-2">
           <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">💬</div>
-          <h3 class="font-bold text-slate-900 text-sm">Draf Pesan Pengingat Sopan</h3>
+          <h3 class="font-bold text-slate-900 text-sm">Draf Pengingat Tagihan WhatsApp</h3>
         </div>
         <button onclick="closeWaModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
       </div>
 
       <div class="space-y-2 text-xs">
-        <p class="text-slate-500">Pesan ini dirancang santun agar silaturahmi tetap terjaga:</p>
+        <p class="text-slate-500">Pesan ini dirancang ramah dan santun agar silaturahmi tetap terjaga:</p>
         <textarea id="modal-wa-text" rows="7" class="w-full border border-slate-200 rounded-xl p-3 text-xs leading-relaxed focus:outline-emerald-500 bg-slate-50"></textarea>
       </div>
 
@@ -1584,20 +1542,25 @@
         <div class="text-[11px] text-slate-500">Masa aktif bertambah sesuai paket yang dipilih.</div>
       </div>
 
-      <!-- Payment Transfer Info -->
+      <!-- WhatsApp Direct Payment Info -->
       <div class="space-y-3 text-xs">
-        <span class="font-bold text-slate-800 block">Metode Pembayaran Transfer / QRIS:</span>
-        
-        <div class="p-3 rounded-xl border border-slate-200 space-y-2 bg-white">
-          <div class="flex items-center justify-between font-bold text-slate-800">
-            <span>Bank BCA / Mandiri / BRI / DANA</span>
-            <span class="text-emerald-700">Online 24 Jam</span>
+        <div class="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/80 text-emerald-950 space-y-2.5">
+          <div class="flex items-center space-x-2 font-bold text-xs">
+            <span class="text-xl">💬</span>
+            <span class="font-extrabold text-slate-900">Aktivasi Langsung via WhatsApp Admin</span>
           </div>
-          <div class="font-mono text-sm bg-slate-100 p-2 rounded-lg font-bold text-slate-900 flex justify-between items-center">
-            <span id="pay-account-number">123-456-7890</span>
-            <button onclick="copyPaymentNumber()" class="text-xs text-emerald-700 font-sans hover:underline">Salin Rekening</button>
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            Untuk perpanjangan masa aktif sewa toko, silakan langsung hubungi WhatsApp Super Admin. Admin akan mengaktifkan sewa toko Anda secara langsung.
+          </p>
+          <div class="bg-white p-3 rounded-xl border border-emerald-200 flex items-center justify-between">
+            <div>
+              <div class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">WhatsApp Super Admin:</div>
+              <div class="font-mono font-extrabold text-sm text-emerald-800">0822-9977-7924</div>
+            </div>
+            <a href="https://wa.me/6282299777924" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-sm">
+              Chat WA
+            </a>
           </div>
-          <div class="text-[11px] text-slate-500">Atas Nama: <strong class="text-slate-800">Admin TemanUsaha</strong></div>
         </div>
       </div>
 
@@ -1605,9 +1568,9 @@
       <div class="space-y-2 pt-2 border-t border-slate-100">
         <button onclick="confirmPaymentWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
           <span>📲</span>
-          <span>Konfirmasi Pembayaran via WhatsApp</span>
+          <span>Hubungi & Aktifkan via WhatsApp (082299777924)</span>
         </button>
-        <p class="text-[10px] text-slate-400 text-center">Setelah transfer, kirimkan bukti transfer lewat WA untuk aktivasi instan.</p>
+        <p class="text-[10px] text-slate-400 text-center">Admin siap melayani perpanjangan sewa toko Anda setiap hari.</p>
       </div>
     </div>
   </div>
@@ -1915,6 +1878,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="./src/firebase.js"></script>
   <!-- Embedded Application Logic -->
-  <script src="./src/app.js?v=7.0"></script>
+  <script src="./src/app.js?v=10.0"></script>
 </body>
 </html>
