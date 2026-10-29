@@ -1339,6 +1339,38 @@
             </button>
           </div>
 
+          <!-- Box Integrasi AI Gemini -->
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+                  <span>🧠</span>
+                  <span>Koneksi AI Cerdas (Google Gemini)</span>
+                </h3>
+                <p class="text-xs text-slate-500">Hubungkan kunci API Gemini untuk konsultasi bisnis bebas pertanyaan tanpa batas</p>
+              </div>
+              <span id="gemini-status-pill" class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">Aktif Cerdas</span>
+            </div>
+
+            <div class="space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Google Gemini API Key (Awalan AIzaSy...):</label>
+                <div class="flex items-center space-x-2">
+                  <input type="password" id="settings-gemini-key" placeholder="Tempel kunci API Google AI Studio Anda di sini..." class="flex-1 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-mono focus:outline-emerald-500">
+                  <button type="button" onclick="togglePasswordVisibility('settings-gemini-key', 'eye-gemini-key')" class="p-2 border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800">
+                    <span id="eye-gemini-key">👁️</span>
+                  </button>
+                  <button onclick="saveGeminiApiKey()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs whitespace-nowrap shadow-sm">
+                    Simpan Kunci
+                  </button>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                  💡 <em>Gratis 1.500 tanya/hari dari Google. Dapatkan di <a href="https://aistudio.google.com/apikey" target="_blank" class="text-emerald-700 font-bold underline">Google AI Studio</a> (pastikan formatnya diawali AIzaSy...). Bila kosong, Asisten tetap aktif menganalisis data riil toko Anda secara lokal!</em>
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- Box Manajemen Data & Logout -->
           <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
             <div class="border-b border-slate-100 pb-3">
@@ -1410,16 +1442,45 @@
       <div class="space-y-3 text-xs">
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Nama Produk:</label>
-          <input type="text" id="new-prod-name" placeholder="Misal: Kecap Manis 550ml" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+          <input type="text" id="new-prod-name" placeholder="Misal: Daster Rayon Jumbo / Minyak Goreng 2L" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Kategori:</label>
-            <input type="text" id="new-prod-cat" value="Sembako" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+            <select id="new-prod-cat-select" onchange="toggleCustomOption(this, 'new-prod-cat-custom')" class="w-full border border-slate-200 rounded-lg px-2.5 py-2 text-xs bg-white focus:outline-emerald-500 cursor-pointer">
+              <option value="Sembako">Sembako & Harian</option>
+              <option value="Makanan & Minuman">Makanan & Minuman</option>
+              <option value="Pakaian & Fashion">Pakaian & Fashion</option>
+              <option value="Kosmetik & Skincare">Kosmetik & Skincare</option>
+              <option value="Elektronik & HP">Elektronik & HP / Pulsa</option>
+              <option value="Bahan Bangunan">Bahan Bangunan</option>
+              <option value="Bengkel & Sparepart">Bengkel & Sparepart</option>
+              <option value="Obat & Kesehatan">Obat & Kesehatan</option>
+              <option value="Reseller Online">Reseller Online</option>
+              <option value="__custom__">➕ Lainnya (Ketik Manual)...</option>
+            </select>
+            <input type="text" id="new-prod-cat-custom" placeholder="Ketik kategori baru..." class="hidden mt-1.5 w-full border border-emerald-300 bg-emerald-50/50 rounded-lg px-2.5 py-1.5 text-xs focus:outline-emerald-500">
           </div>
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Satuan (kg, botol, dll):</label>
-            <input type="text" id="new-prod-unit" value="pcs" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+            <label class="block font-semibold text-slate-700 mb-1">Satuan:</label>
+            <select id="new-prod-unit-select" onchange="toggleCustomOption(this, 'new-prod-unit-custom')" class="w-full border border-slate-200 rounded-lg px-2.5 py-2 text-xs bg-white focus:outline-emerald-500 cursor-pointer">
+              <option value="pcs">pcs (buah)</option>
+              <option value="kg">kg (kilogram)</option>
+              <option value="bungkus">bungkus</option>
+              <option value="botol">botol</option>
+              <option value="karung">karung</option>
+              <option value="dus">dus / karton</option>
+              <option value="pouch">pouch</option>
+              <option value="renceng">renceng</option>
+              <option value="porsi">porsi</option>
+              <option value="sachet">sachet</option>
+              <option value="pasang">pasang</option>
+              <option value="helai">helai / potong</option>
+              <option value="meter">meter</option>
+              <option value="kaleng">kaleng</option>
+              <option value="__custom__">➕ Lainnya (Ketik Manual)...</option>
+            </select>
+            <input type="text" id="new-prod-unit-custom" placeholder="Ketik satuan baru..." class="hidden mt-1.5 w-full border border-emerald-300 bg-emerald-50/50 rounded-lg px-2.5 py-1.5 text-xs focus:outline-emerald-500">
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2">
@@ -1447,6 +1508,96 @@
       <button onclick="submitNewProduct()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md">
         Simpan Produk
       </button>
+    </div>
+  </div>
+
+  <!-- Modal Edit Produk (Ubah Data / Koreksi Salah Input) -->
+  <div id="modal-edit-product" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-base">✏️</span>
+          <h3 class="font-bold text-slate-900 text-sm">Edit Data Produk</h3>
+        </div>
+        <button onclick="closeEditProductModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <input type="hidden" id="edit-prod-id">
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nama Produk:</label>
+          <input type="text" id="edit-prod-name" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500 font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Kategori:</label>
+            <select id="edit-prod-cat-select" onchange="toggleCustomOption(this, 'edit-prod-cat-custom')" class="w-full border border-slate-200 rounded-lg px-2.5 py-2 text-xs bg-white focus:outline-emerald-500 cursor-pointer">
+              <option value="Sembako">Sembako & Harian</option>
+              <option value="Makanan & Minuman">Makanan & Minuman</option>
+              <option value="Pakaian & Fashion">Pakaian & Fashion</option>
+              <option value="Kosmetik & Skincare">Kosmetik & Skincare</option>
+              <option value="Elektronik & HP">Elektronik & HP / Pulsa</option>
+              <option value="Bahan Bangunan">Bahan Bangunan</option>
+              <option value="Bengkel & Sparepart">Bengkel & Sparepart</option>
+              <option value="Obat & Kesehatan">Obat & Kesehatan</option>
+              <option value="Reseller Online">Reseller Online</option>
+              <option value="__custom__">➕ Lainnya (Ketik Manual)...</option>
+            </select>
+            <input type="text" id="edit-prod-cat-custom" placeholder="Ketik kategori..." class="hidden mt-1.5 w-full border border-emerald-300 bg-emerald-50/50 rounded-lg px-2.5 py-1.5 text-xs focus:outline-emerald-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Satuan:</label>
+            <select id="edit-prod-unit-select" onchange="toggleCustomOption(this, 'edit-prod-unit-custom')" class="w-full border border-slate-200 rounded-lg px-2.5 py-2 text-xs bg-white focus:outline-emerald-500 cursor-pointer">
+              <option value="pcs">pcs (buah)</option>
+              <option value="kg">kg (kilogram)</option>
+              <option value="bungkus">bungkus</option>
+              <option value="botol">botol</option>
+              <option value="karung">karung</option>
+              <option value="dus">dus / karton</option>
+              <option value="pouch">pouch</option>
+              <option value="renceng">renceng</option>
+              <option value="porsi">porsi</option>
+              <option value="sachet">sachet</option>
+              <option value="pasang">pasang</option>
+              <option value="helai">helai / potong</option>
+              <option value="meter">meter</option>
+              <option value="kaleng">kaleng</option>
+              <option value="__custom__">➕ Lainnya (Ketik Manual)...</option>
+            </select>
+            <input type="text" id="edit-prod-unit-custom" placeholder="Ketik satuan..." class="hidden mt-1.5 w-full border border-emerald-300 bg-emerald-50/50 rounded-lg px-2.5 py-1.5 text-xs focus:outline-emerald-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Harga Beli / Modal (Rp):</label>
+            <input type="number" id="edit-prod-cost" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500 font-semibold">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Harga Jual (Rp):</label>
+            <input type="number" id="edit-prod-sell" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500 font-bold text-emerald-800">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Stok Tersedia Saat Ini:</label>
+            <input type="number" id="edit-prod-stock" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500 font-bold">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Batas Minimal Stok:</label>
+            <input type="number" id="edit-prod-min" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2 pt-2">
+        <button onclick="submitEditProduct()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md">
+          ✓ Simpan Perubahan
+        </button>
+        <button onclick="closeEditProductModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs">
+          Batal
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1878,6 +2029,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="./src/firebase.js"></script>
   <!-- Embedded Application Logic -->
-  <script src="./src/app.js?v=10.0"></script>
+  <script src="./src/app.js?v=12.0"></script>
 </body>
 </html>

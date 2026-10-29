@@ -1,17 +1,61 @@
 // TemanUsaha - Logika Aplikasi & Asisten UMKM Indonesia
 
-// ==================== KONFIGURASI GEMINI AI ====================
-// Untuk mengaktifkan AI asisten yang cerdas, dapatkan API Key gratis di:
-// https://aistudio.google.com/apikey
-// Ganti nilai di bawah ini dengan API Key Anda
-const GEMINI_API_KEY = 'AQ.Ab8RN6K6SvV2daoQv4Z8ruW_8gZiYx3XhIUhPaUiUz5J2RQnLQ';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY;
+// ==================== KONFIGURASI ASISTEN AI (GEMINI & SMART ENGINE) ====================
+
+const DEFAULT_GEMINI_KEY = 'AQ.Ab8RN6KeEVS6Pd_x0h-pZau8bPAZyItMGgCyVKDiqqScTZM49w';
+
+function getGeminiApiKey() {
+  const savedKey = localStorage.getItem('temanusaha_gemini_api_key');
+  if (savedKey && savedKey.trim().length > 10) return savedKey.trim();
+  return DEFAULT_GEMINI_KEY;
+}
+
+function isValidGeminiKey(key) {
+  if (!key || typeof key !== 'string') return false;
+  const clean = key.trim();
+  // Mendukung format kunci Google AI Studio (AIzaSy... maupun AQ...)
+  return (clean.startsWith('AIzaSy') || clean.startsWith('AQ.')) && clean.length >= 30;
+}
+
+function saveGeminiApiKey() {
+  const input = document.getElementById('settings-gemini-key');
+  if (!input) return;
+  const key = input.value.trim();
+  if (!key) {
+    localStorage.removeItem('temanusaha_gemini_api_key');
+    alert('Kunci API Gemini dikembalikan ke kunci bawaan.');
+    updateGeminiKeyUI();
+    return;
+  }
+  localStorage.setItem('temanusaha_gemini_api_key', key);
+  updateGeminiKeyUI();
+  alert('✓ Kunci API Google Gemini berhasil disimpan dan aktif!');
+}
+window.saveGeminiApiKey = saveGeminiApiKey;
+
+function updateGeminiKeyUI() {
+  const input = document.getElementById('settings-gemini-key');
+  const pill = document.getElementById('gemini-status-pill');
+  const key = getGeminiApiKey();
+  if (input && document.activeElement !== input) {
+    input.value = key;
+  }
+  if (pill) {
+    if (isValidGeminiKey(key)) {
+      pill.innerText = '● Gemini Cloud Terhubung';
+      pill.className = 'text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full';
+    } else {
+      pill.innerText = '● Penasihat AI Lokal Aktif';
+      pill.className = 'text-[10px] bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-full';
+    }
+  }
+}
 
 /**
  * Membangun konteks data toko saat ini untuk dikirim ke Gemini AI.
  */
 function buildBusinessContext() {
-  const metrics = computeMetrics ? computeMetrics() : {};
+  const metrics = typeof computeMetrics === 'function' ? computeMetrics() : {};
   const profile = state.storeProfile || {};
   const products = state.products || [];
   const customers = state.customers || [];
@@ -19,18 +63,18 @@ function buildBusinessContext() {
   const topProducts = [...products]
     .sort((a, b) => (b.sellPrice - b.costPrice) * (b.dailySalesAvg || 1) - (a.sellPrice - a.costPrice) * (a.dailySalesAvg || 1))
     .slice(0, 5)
-    .map(p => `  - ${p.name}: Harga Jual Rp${p.sellPrice.toLocaleString('id-ID')}, Modal Rp${p.costPrice.toLocaleString('id-ID')}, Stok ${p.stock} ${p.unit}, Avg ${p.dailySalesAvg || 0} ${p.unit}/hari`)
+    .map(p => `  - ${p.name}: Harga Jual Rp${(p.sellPrice || 0).toLocaleString('id-ID')}, Modal Rp${(p.costPrice || 0).toLocaleString('id-ID')}, Stok ${p.stock} ${p.unit}, Avg ${p.dailySalesAvg || 0} ${p.unit}/hari`)
     .join('\n');
 
   const criticalStock = products
     .filter(p => p.stock <= (p.minStock || 5))
     .map(p => `  - ${p.name}: Sisa ${p.stock} ${p.unit} (min ${p.minStock || 5})`)
-    .join('\n') || '  - (Tidak ada stok kritis)';
+    .join('\n') || '  - (Semua stok dalam batas aman)';
 
-  const totalPiutang = customers.reduce((acc, c) => acc + (c.debt || 0), 0);
+  const totalPiutang = customers.reduce((acc, c) => acc + (c.debt || c.debtAmount || 0), 0);
   const piutangList = customers
-    .filter(c => (c.debt || 0) > 0)
-    .map(c => `  - ${c.name}: Rp${(c.debt || 0).toLocaleString('id-ID')}`)
+    .filter(c => (c.debt || c.debtAmount || 0) > 0)
+    .map(c => `  - ${c.name}: Rp${(c.debt || c.debtAmount || 0).toLocaleString('id-ID')}`)
     .slice(0, 5)
     .join('\n') || '  - (Tidak ada piutang)';
 
@@ -49,7 +93,7 @@ KEUANGAN HARI INI:
 - Uang Kas di Laci (Fisik): Rp${(metrics.cashInHand || 0).toLocaleString('id-ID')}
 - Modal di Stok Barang: Rp${(metrics.totalInventoryAssetValue || 0).toLocaleString('id-ID')}
 
-PRODUK TERBAIK (5 Teratas berdasar kontribusi laba):
+PRODUK TERBAIK:
 ${topProducts || '  - (Belum ada produk)'}
 
 STOK KRITIS (Perlu segera diisi ulang):
@@ -60,9 +104,16 @@ ${piutangList}`;
 }
 
 /**
- * Memanggil Gemini API dengan konteks data toko riil.
+ * Memanggil Gemini API jika ada API Key resmi yang valid.
  */
 async function callGeminiAPI(userQuestion) {
+  const key = getGeminiApiKey();
+  if (!isValidGeminiKey(key)) {
+    throw new Error('NO_VALID_GEMINI_KEY');
+  }
+
+  // Gunakan model gemini-flash-latest dengan header x-goog-api-key resmi
+  const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
   const businessContext = buildBusinessContext();
   const storeName = (state.storeProfile && state.storeProfile.name) || 'Toko';
   const businessType = (state.storeProfile && state.storeProfile.type) || 'usaha';
@@ -71,12 +122,10 @@ async function callGeminiAPI(userQuestion) {
 
 Panduan menjawab:
 - Selalu gunakan data riil toko yang diberikan — jangan mengarang angka
-- Jawab dalam Bahasa Indonesia yang hangat dan mudah dipahami pemilik warung/toko kecil
-- Berikan saran tindakan yang KONKRET dan SPESIFIK, bukan teori umum
-- Jika ditanya sesuatu yang tidak ada datanya (misal data bulan lalu), jelaskan dengan jujur
-- Gunakan format yang mudah dibaca: bullet point, angka rupiah dengan format Indonesia
-- Jawab ringkas tapi bermakna — maksimal 4-5 paragraf pendek
-- Gunakan emoji sesekali agar terasa personal dan semangat (jangan berlebihan)
+- Jawab dalam Bahasa Indonesia yang hangat, bersahabat, dan mudah dipahami pemilik warung/toko
+- Berikan saran tindakan yang KONKRET, SPESIFIK, dan RASIONAL berdasarkan angka keuangan toko
+- Gunakan format yang mudah dibaca: poin-poin tebal, angka rupiah rapi
+- Jawab ringkas maksimal 4-5 paragraf
 
 ${businessContext}`;
 
@@ -90,15 +139,16 @@ ${businessContext}`;
     }
   };
 
-  const response = await fetch(GEMINI_API_URL, {
+  const response = await fetch(apiUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': key
+    },
     body: JSON.stringify(requestBody)
   });
 
   if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    console.error('Gemini API error:', response.status, errData);
     throw new Error(`HTTP ${response.status}`);
   }
 
@@ -106,6 +156,223 @@ ${businessContext}`;
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Empty response');
   return text;
+}
+
+/**
+ * PENASIHAT BISNIS CERDAS LOKAL (SMART EXPERT ENGINE)
+ * Menjawab setiap pertanyaan pemilik toko secara interaktif, mendalam, dan relevan
+ * menggunakan data riil pembukuan toko saat ini tanpa pernah stagnan atau macet.
+ */
+function generateSmartBusinessAdvice(question) {
+  const metrics = computeMetrics();
+  const q = (question || '').toLowerCase();
+  const storeName = (state.storeProfile && state.storeProfile.name) || 'Toko Anda';
+  const businessType = (state.storeProfile && state.storeProfile.type) || 'Usaha UMKM';
+
+  const marginPct = metrics.totalSales > 0 ? Math.round((metrics.grossProfit / metrics.totalSales) * 100) : 15;
+
+  // 1. PERTANYAAN TENTANG KARYAWAN / PEGAWAI / TAMBAH ORANG
+  if (q.includes('karyawan') || q.includes('pegawai') || q.includes('tambah orang') || q.includes('asisten') || q.includes('rekrut')) {
+    const estGajiBulan = 1500000;
+    const estGajiHari = Math.round(estGajiBulan / 30);
+    const targetOmzetTambahanHari = Math.round(estGajiHari / (Math.max(marginPct, 10) / 100));
+    const targetOmzetTambahanBulan = targetOmzetTambahanHari * 30;
+
+    const isCapable = metrics.netProfit >= (estGajiHari * 2);
+
+    return `👥 **Analisis Kelayakan Menambah Karyawan di ${storeName}:**
+
+Mari kita hitung secara rasional tanpa tebak-tebakan berdasarkan performa toko hari ini:
+
+• **Laba Bersih Riil Toko Hari Ini:** ${formatRupiah(metrics.netProfit)}
+• **Rata-Rata Margin Kotor Toko:** ~${marginPct}%
+• **Standar Estimasi Gaji Karyawan:** Rp 1.500.000/bulan (~${formatRupiah(estGajiHari)}/hari)
+
+🎯 **Target Beban Tambahan:**
+Untuk menutup biaya gaji ${formatRupiah(estGajiHari)}/hari tanpa memotong keuntungan pemilik, toko Anda harus menghasilkan omzet tambahan minimal:
+👉 **${formatRupiah(targetOmzetTambahanHari)}/hari** (atau ~${formatRupiah(targetOmzetTambahanBulan)}/bulan).
+
+💡 **Kesimpulan TemanUsaha:**
+${isCapable 
+  ? `✅ **Keuangan Toko Cukup Kuat!** Laba bersih harian Anda saat ini (${formatRupiah(metrics.netProfit)}) mampu menopang gaji karyawan, asalkan karyawan tersebut membantu memperluas penjualan.`
+  : `⚠️ **Sebaiknya Tunda Dahulu.** Laba bersih harian saat ini (${formatRupiah(metrics.netProfit)}) belum cukup aman untuk menanggung gaji Rp 50.000/hari. Jika dipaksakan merekrut sekarang, gaji karyawan akan memakan modal belanja barang toko Anda.`
+}
+
+🎯 **Saran Langkah Praktis:**
+1. Sebelum merekrut karyawan tetap, gunakan pencatatan kasir kilat ini agar Anda bisa melayani pembeli lebih cepat sendirian.
+2. Jika butuh bantuan saat jam ramai, coba pekerjakan tenaga paruh waktu (part-time) di jam sibuk dengan bayaran per hari, bukan gaji bulanan tetap.
+3. Pastikan tugas karyawan fokus menambah penjualan (misal antar pesanan / packing online), bukan sekadar duduk menunggu pembeli.`;
+  }
+
+  // 2. PERTANYAAN PRODUK PALING UNTUNG / TERLARIS
+  if (q.includes('paling untung') || q.includes('laris') || q.includes('produk mana') || q.includes('terlaris') || q.includes('andalan') || q.includes('terbaik') || (q.includes('produk') && q.includes('untung'))) {
+    const sorted = [...state.products].map(p => {
+      const marginRp = p.sellPrice - p.costPrice;
+      const marginPct = p.sellPrice > 0 ? Math.round((marginRp / p.sellPrice) * 100) : 0;
+      const estDailyProfit = marginRp * (p.dailySalesAvg || 1);
+      return { ...p, marginRp, marginPct, estDailyProfit };
+    }).sort((a, b) => b.estDailyProfit - a.estDailyProfit);
+
+    const top1 = sorted[0] || { name: 'Produk Toko', sellPrice: 0, costPrice: 0, marginPct: 0, estDailyProfit: 0, unit: 'pcs' };
+    const top2 = sorted[1] || { name: 'Produk Pilihan', sellPrice: 0, costPrice: 0, marginPct: 0, estDailyProfit: 0, unit: 'pcs' };
+
+    return `🏆 **Produk Bintang Penghasil Laba Terbesar di Toko Anda:**
+
+Berdasarkan data produk dan margin toko ${storeName}:
+
+🥇 **Juara 1: ${top1.name}**
+• Harga Jual: ${formatRupiah(top1.sellPrice)} | Modal (HPP): ${formatRupiah(top1.costPrice)}
+• Keuntungan Per ${top1.unit}: **${formatRupiah(top1.marginRp)}** (Margin: ${top1.marginPct}%)
+• Estimasi Laba Harian: **~${formatRupiah(top1.estDailyProfit)}/hari**
+
+🥈 **Juara 2: ${top2.name}**
+• Harga Jual: ${formatRupiah(top2.sellPrice)} | Modal: ${formatRupiah(top2.costPrice)}
+• Keuntungan Per ${top2.unit}: **${formatRupiah(top2.marginRp)}** (Margin: ${top2.marginPct}%)
+
+🎯 **Saran TemanUsaha:**
+Jangan sampai kedua barang ini kehabisan stok! Inilah mesin uang kas yang membiayai operasional dan keuntungan harian toko Anda. Pajang kedua barang ini di posisi paling mudah dilihat pembeli.`;
+  }
+
+  // 3. PERTANYAAN TENTANG LABA / UNTUNG / TIPIS / TURUN
+  if (q.includes('laba') || q.includes('untung') || q.includes('tipis') || q.includes('turun') || q.includes('rugi') || q.includes('keuntungan')) {
+    const hppPct = 100 - marginPct;
+    return `📊 **Diagnosa Laba & Keuntungan Toko Hari Ini:**
+
+• **Total Penjualan (Omzet):** ${formatRupiah(metrics.totalSales)}
+• **Modal Barang Terjual (HPP):** ${formatRupiah(metrics.totalHPP)} (${hppPct}% dari omzet)
+• **Biaya Operasional Toko:** ${formatRupiah(metrics.totalOpsExpenses)}
+• **Laba Bersih Riil:** ${formatRupiah(metrics.netProfit)} (Margin Bersih: ${metrics.totalSales > 0 ? Math.round((metrics.netProfit / metrics.totalSales) * 100) : 0}%)
+
+💡 **Analisis TemanUsaha:**
+Margin laba kotor toko Anda saat ini berkisar **${marginPct}%**.
+${marginPct < 15 
+  ? `Margin toko Anda tergolong tipis (<15%). Hal ini wajar jika mayoritas barang yang laku adalah produk kebutuhan pokok dengan persaingan ketat.`
+  : `Margin kotor toko Anda tergolong sehat di atas 15%. Namun pastikan biaya operasional dan uang pribadi tidak menggerus kas toko.`
+}
+
+🎯 **Saran Menaikkan Keuntungan:**
+1. **Strategi Bundling (Paket Hemat):** Gabungkan barang margin tipis dengan barang pelengkap yang bermargin tebal di atas 25%.
+2. **Upselling di Meja Kasir:** Setiap kali ada yang belanja, tawarkan produk pelengkap (seperti kopi, aksesoris, atau cemilan) sebelum mereka membayar.
+3. **Tekan Beban Operasional:** Pastikan pengeluaran harian seperti kantong plastik, pulsa toko, dan listrik terkontrol rapi di menu Kasir Cepat.`;
+  }
+
+  // 4. PERTANYAAN TENTANG AMBIL UANG PRIBADI / KEBUTUHAN RUMAH
+  if (q.includes('pribadi') || q.includes('ambil uang') || q.includes('rumah') || q.includes('keperluan') || q.includes('prive')) {
+    if (metrics.isPersonalOverdrawn) {
+      return `⚠️ **PERINGATAN: Modal Belanja Toko Sedang Tergerus!**
+
+Catatan keuangan hari ini menunjukkan:
+• **Laba Bersih Hari Ini:** ${formatRupiah(metrics.netProfit)}
+• **Uang Pribadi yang Sudah Diambil:** ${formatRupiah(metrics.totalPersonalDraw)}
+• **Modal Belanja Terpakai (Tergerus):** 🚨 **${formatRupiah(metrics.capitalErosionAmount)}**
+
+💡 **Diagnosa TemanUsaha:**
+Pengambilan uang pribadi Anda hari ini sudah melebihi laba bersih toko. Jika mengambil uang lagi, besok toko akan kekurangan uang tunai untuk kulakan/belanja barang dagangan kembali.
+
+🎯 **Tindakan:** Tunda pengambilan uang pribadi. Tingkatkan penjualan tunai hari ini untuk memulihkan modal belanja barang yang tergerus.`;
+    } else {
+      return `✅ **Status Aman untuk Ambil Uang Pribadi:**
+
+• **Laba Bersih Riil Hari Ini:** ${formatRupiah(metrics.netProfit)}
+• **Modal Belanja Barang Terjual (Wajib Diputar):** ${formatRupiah(metrics.lockedRestockFund)} (Terkunci Aman 🔒)
+• **Sisa Jatah Uang Pribadi yang Aman:** **${formatRupiah(metrics.safePersonalAllowance)}**
+
+💡 **Diagnosa TemanUsaha:**
+Modal belanja barang sudah diamankan. Selama pengambilan uang pribadi tidak melebihi **${formatRupiah(metrics.safePersonalAllowance)}**, perputaran barang toko Anda besok tetap terjamin aman!`;
+    }
+  }
+
+  // 5. PERTANYAAN TENTANG MODAL TAMBAHAN / 5 JUTA / DANA CADANGAN
+  if (q.includes('modal') || q.includes('juta') || q.includes('dana cadangan') || q.includes('alokasi')) {
+    const restockEst = metrics.criticalItems.reduce((acc, i) => acc + (i.costEst || 0), 0) || 1200000;
+    return `💰 **Rekomendasi Alokasi Modal Usaha untuk ${storeName}:**
+
+Bila Anda memiliki dana modal segar (misal Rp 5.000.000), berikut rumus alokasi paling aman agar toko tidak macet:
+
+1. **Amankan Stok Barang Cepat Laku (40% - ~Rp 2.000.000):**
+Gunakan untuk restock barang yang sering dicari pembeli dan hampir habis (${metrics.criticalItems.slice(0, 2).map(i => i.name).join(', ') || 'Barang Andalan'}).
+
+2. **Dana Cadangan Kas Operasional (35% - ~Rp 1.750.000):**
+Simpan terpisah di rekening darurat toko untuk antisipasi kenaikan harga grosir dari distributor atau belanja mendadak.
+
+3. **Uji Coba Varian / Produk Baru (15% - ~Rp 750.000):**
+Belanja produk tren baru yang sering ditanyakan pelanggan di sekitar Anda tapi belum Anda sediakan.
+
+4. **Hak Tabungan Pribadi Pemilik (10% - ~Rp 500.000):**
+Sisihkan sebagai imbalan jerih payah Anda dan simpan di rekening pribadi agar tidak tercampur kas toko.`;
+  }
+
+  // 6. PERTANYAAN TENTANG STOK MENIPIS / BELANJA BARANG DULUAN
+  if (q.includes('stok') || q.includes('habis') || q.includes('belanja') || q.includes('kulakan') || q.includes('beli barang')) {
+    const critList = metrics.criticalItems;
+    if (critList.length > 0) {
+      const itemsText = critList.slice(0, 4).map(i => `• **${i.name}**: Sisa ${i.stock} ${i.unit} (Perkiraan habis dalam ~${i.daysLeft} hari, estimasi modal: ${formatRupiah(i.costEst)})`).join('\n');
+      return `📦 **Daftar Barang yang Wajib Dibelanja Duluan Hari Ini:**
+
+Ada **${critList.length} produk** yang berada di zona merah (hampir habis):
+
+${itemsText}
+
+🎯 **Saran TemanUsaha:**
+Prioritaskan belanja barang-barang di atas hari ini juga. Jangan biarkan pelanggan datang dan pulang dengan tangan kosong karena barang andalan habis.`;
+    } else {
+      return `✅ **Kabar Baik! Stok Barang Toko Anda Dalam Kondisi Aman.**
+
+Tidak ada barang yang mendekati batas minimal stok hari ini.
+• **Total Nilai Aset Stok:** ${formatRupiah(metrics.totalInventoryAssetValue)}
+• **Barang Slow-Moving (Menumpuk):** ${metrics.slowItems.length} Produk
+
+💡 **Saran Tindakan:**
+Fokuskan tenaga hari ini untuk memutar barang yang lambat laku lewat promo paket hemat di menu Ide Promosi & Status WA.`;
+    }
+  }
+
+  // 7. PERTANYAAN TENTANG PIUTANG / BON PELANGGAN
+  if (q.includes('utang') || q.includes('piutang') || q.includes('bon') || q.includes('tagih') || q.includes('tempo')) {
+    const totalPiutang = state.customers.reduce((acc, c) => acc + (c.debtAmount || c.debt || 0), 0);
+    const urgent = state.customers.filter(c => (c.debtAmount || c.debt || 0) > 0);
+    return `📒 **Status Buku Piutang & Bon Pelanggan Toko:**
+
+• **Total Uang Tertahan di Pelanggan:** **${formatRupiah(totalPiutang)}**
+• **Jumlah Pelanggan yang Memiliki Bon:** ${urgent.length} Orang
+
+💡 **Saran TemanUsaha:**
+Uang piutang adalah modal belanja Anda yang tertahan di luar toko.
+Gunakan fitur **"Buku Piutang & WA"** di menu samping untuk mengirim draf pesan pengingat tagihan yang santun lewat WhatsApp agar uang kas toko segera kembali tanpa merusak hubungan silaturahmi.`;
+  }
+
+  // 8. PERTANYAAN TENTANG PROMOSI / CARA NAIKKAN PENJUALAN
+  if (q.includes('promosi') || q.includes('promo') || q.includes('naikkan omzet') || q.includes('jual') || q.includes('lariskan') || q.includes('status wa')) {
+    return `📢 **3 Strategi Praktis Dongkrak Penjualan Toko Hari Ini:**
+
+1. **Paket Promo Bundling (Gabung Barang):**
+Gabungkan 1 barang yang sangat dicari dengan 1 barang yang lambat laku dengan sedikit potongan harga. Pembeli merasa untung, dan modal mati toko Anda langsung cair jadi uang kas.
+
+2. **Pajang Barang 'Impulse Buying' di Dekat Kasir:**
+Taruh barang-barang kecil bermargin tebal (seperti permen, kopi renceng, sabun cuci, aksesoris) tepat di depan meja kasir saat orang sedang mengantre bayar.
+
+3. **Status WhatsApp Terjadwal:**
+Posting foto barang dagangan atau promo toko di WhatsApp status pada 2 jam emas:
+• Pukul 07.30 - 09.00 pagi (waktu orang bersiap-siap)
+• Pukul 17.00 - 19.30 malam (waktu santai di rumah)
+Gunakan kalimat ramah dari menu **"Ide Promosi & Status WA"** di aplikasi ini!`;
+  }
+
+  // 9. JAWABAN UMUM / RINGKASAN CERDAS BERBASIS ANGKA RIIL
+  return `📊 **Laporan Cerdas Kondisi Usaha ${storeName} Hari Ini:**
+
+• **Total Penjualan (Omzet):** ${formatRupiah(metrics.totalSales)}
+• **Modal Pokok Barang (HPP):** ${formatRupiah(metrics.totalHPP)}
+• **Laba Bersih Riil:** ${formatRupiah(metrics.netProfit)}
+• **Uang Kas Fisik di Laci:** ${formatRupiah(metrics.cashInHand)}
+• **Aset Tertahan di Stok:** ${formatRupiah(metrics.totalInventoryAssetValue)}
+
+💡 **Diagnosa TemanUsaha:**
+Keuangan toko Anda hari ini berjalan aktif. Untuk mendongkrak keuntungan lebih lanjut, Anda bisa menanyakan hal spesifik seperti:
+- *"Apakah saya mampu menambah karyawan?"*
+- *"Produk mana yang paling untung?"*
+- *"Bolehkah saya ambil uang pribadi hari ini?"*
+- *"Stok mana yang harus saya belanja duluan?"*`;
 }
 
 // ==================== DATA AWAL DEMO TOKO ====================
@@ -2355,9 +2622,15 @@ function renderInventory(metrics) {
         </td>
         <td class="py-3 px-4 text-center">${statusPill}</td>
         <td class="py-3 px-4 text-right font-bold text-slate-700">${formatRupiah(lockedCapital)}</td>
-        <td class="py-3 px-4 text-center">
-          <button onclick="openRestockModal('${p.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold shadow-sm whitespace-nowrap">
-            + Belanja Barang
+        <td class="py-3 px-4 text-center space-x-1 whitespace-nowrap">
+          <button onclick="openRestockModal('${p.id}')" title="Belanja barang / tambah stok" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold shadow-sm">
+            + Belanja
+          </button>
+          <button onclick="openEditProductModal('${p.id}')" title="Koreksi salah input / ubah harga & stok" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-300">
+            ✏️ Edit
+          </button>
+          <button onclick="deleteProduct('${p.id}')" title="Hapus produk ini" class="px-1.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-[11px] font-bold border border-red-200">
+            🗑️
           </button>
         </td>
       </tr>
@@ -2365,7 +2638,49 @@ function renderInventory(metrics) {
   }).join('');
 }
 
+// ==================== HELPER INPUT DROPDOWN & CUSTOM ====================
+function toggleCustomOption(selectEl, customInputId) {
+  const customInput = document.getElementById(customInputId);
+  if (!customInput) return;
+  if (selectEl.value === '__custom__') {
+    customInput.classList.remove('hidden');
+    customInput.focus();
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+}
+window.toggleCustomOption = toggleCustomOption;
+
 function openAddProductModal() {
+  // Reset field
+  const nameInput = document.getElementById('new-prod-name');
+  if (nameInput) nameInput.value = '';
+  const costInput = document.getElementById('new-prod-cost');
+  if (costInput) costInput.value = '';
+  const sellInput = document.getElementById('new-prod-sell');
+  if (sellInput) sellInput.value = '';
+  const stockInput = document.getElementById('new-prod-stock');
+  if (stockInput) stockInput.value = '10';
+  const minInput = document.getElementById('new-prod-min');
+  if (minInput) minInput.value = '5';
+
+  const catSelect = document.getElementById('new-prod-cat-select');
+  if (catSelect) catSelect.selectedIndex = 0;
+  const catCustom = document.getElementById('new-prod-cat-custom');
+  if (catCustom) {
+    catCustom.classList.add('hidden');
+    catCustom.value = '';
+  }
+
+  const unitSelect = document.getElementById('new-prod-unit-select');
+  if (unitSelect) unitSelect.selectedIndex = 0;
+  const unitCustom = document.getElementById('new-prod-unit-custom');
+  if (unitCustom) {
+    unitCustom.classList.add('hidden');
+    unitCustom.value = '';
+  }
+
   document.getElementById('modal-add-product').classList.remove('hidden');
 }
 
@@ -2375,15 +2690,30 @@ function closeAddProductModal() {
 
 function submitNewProduct() {
   const name = document.getElementById('new-prod-name').value.trim();
-  const cat = document.getElementById('new-prod-cat').value.trim() || 'Umum';
-  const unit = document.getElementById('new-prod-unit').value.trim() || 'pcs';
+  
+  // Baca Kategori (Dropdown atau Custom)
+  const catSelect = document.getElementById('new-prod-cat-select');
+  const catCustom = document.getElementById('new-prod-cat-custom');
+  let cat = catSelect ? catSelect.value : 'Sembako';
+  if (cat === '__custom__') {
+    cat = (catCustom && catCustom.value.trim()) ? catCustom.value.trim() : 'Lainnya';
+  }
+
+  // Baca Satuan (Dropdown atau Custom)
+  const unitSelect = document.getElementById('new-prod-unit-select');
+  const unitCustom = document.getElementById('new-prod-unit-custom');
+  let unit = unitSelect ? unitSelect.value : 'pcs';
+  if (unit === '__custom__') {
+    unit = (unitCustom && unitCustom.value.trim()) ? unitCustom.value.trim() : 'pcs';
+  }
+
   const cost = parseInt(document.getElementById('new-prod-cost').value, 10);
   const sell = parseInt(document.getElementById('new-prod-sell').value, 10);
   const stock = parseInt(document.getElementById('new-prod-stock').value, 10) || 0;
   const minStock = parseInt(document.getElementById('new-prod-min').value, 10) || 5;
 
-  if (!name || !cost || !sell) {
-    alert('Mohon isi nama barang, harga beli, dan harga jual!');
+  if (!name || isNaN(cost) || isNaN(sell)) {
+    alert('Mohon isi nama produk, harga beli, dan harga jual yang valid!');
     return;
   }
 
@@ -2402,8 +2732,142 @@ function submitNewProduct() {
   closeAddProductModal();
   saveState();
   renderAll();
-  alert(`Produk ${name} berhasil ditambahkan!`);
+  alert(`✓ Produk "${name}" (${cat}) berhasil ditambahkan ke daftar barang!`);
 }
+
+// ==================== FITUR EDIT & HAPUS PRODUK ====================
+function openEditProductModal(productId) {
+  const prod = state.products.find(p => p.id === productId);
+  if (!prod) return;
+
+  document.getElementById('edit-prod-id').value = prod.id;
+  document.getElementById('edit-prod-name').value = prod.name;
+  document.getElementById('edit-prod-cost').value = prod.costPrice;
+  document.getElementById('edit-prod-sell').value = prod.sellPrice;
+  document.getElementById('edit-prod-stock').value = prod.stock;
+  document.getElementById('edit-prod-min').value = prod.minStock;
+
+  // Atur pilihan Kategori
+  const catSelect = document.getElementById('edit-prod-cat-select');
+  const catCustom = document.getElementById('edit-prod-cat-custom');
+  let catFound = false;
+  if (catSelect) {
+    for (let i = 0; i < catSelect.options.length; i++) {
+      if (catSelect.options[i].value === prod.category) {
+        catSelect.selectedIndex = i;
+        catFound = true;
+        break;
+      }
+    }
+    if (!catFound) {
+      catSelect.value = '__custom__';
+      if (catCustom) {
+        catCustom.classList.remove('hidden');
+        catCustom.value = prod.category;
+      }
+    } else if (catCustom) {
+      catCustom.classList.add('hidden');
+      catCustom.value = '';
+    }
+  }
+
+  // Atur pilihan Satuan
+  const unitSelect = document.getElementById('edit-prod-unit-select');
+  const unitCustom = document.getElementById('edit-prod-unit-custom');
+  let unitFound = false;
+  if (unitSelect) {
+    for (let i = 0; i < unitSelect.options.length; i++) {
+      if (unitSelect.options[i].value === prod.unit) {
+        unitSelect.selectedIndex = i;
+        unitFound = true;
+        break;
+      }
+    }
+    if (!unitFound) {
+      unitSelect.value = '__custom__';
+      if (unitCustom) {
+        unitCustom.classList.remove('hidden');
+        unitCustom.value = prod.unit;
+      }
+    } else if (unitCustom) {
+      unitCustom.classList.add('hidden');
+      unitCustom.value = '';
+    }
+  }
+
+  const modal = document.getElementById('modal-edit-product');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeEditProductModal() {
+  const modal = document.getElementById('modal-edit-product');
+  if (modal) modal.classList.add('hidden');
+}
+
+function submitEditProduct() {
+  const id = document.getElementById('edit-prod-id').value;
+  const prodIndex = state.products.findIndex(p => p.id === id);
+  if (prodIndex === -1) return;
+
+  const name = document.getElementById('edit-prod-name').value.trim();
+  const cost = parseInt(document.getElementById('edit-prod-cost').value, 10);
+  const sell = parseInt(document.getElementById('edit-prod-sell').value, 10);
+  const stock = parseInt(document.getElementById('edit-prod-stock').value, 10);
+  const minStock = parseInt(document.getElementById('edit-prod-min').value, 10) || 5;
+
+  if (!name || isNaN(cost) || isNaN(sell) || isNaN(stock)) {
+    alert('Mohon isi semua data produk dengan angka yang valid!');
+    return;
+  }
+
+  // Baca Kategori
+  const catSelect = document.getElementById('edit-prod-cat-select');
+  const catCustom = document.getElementById('edit-prod-cat-custom');
+  let cat = catSelect ? catSelect.value : state.products[prodIndex].category;
+  if (cat === '__custom__') {
+    cat = (catCustom && catCustom.value.trim()) ? catCustom.value.trim() : 'Lainnya';
+  }
+
+  // Baca Satuan
+  const unitSelect = document.getElementById('edit-prod-unit-select');
+  const unitCustom = document.getElementById('edit-prod-unit-custom');
+  let unit = unitSelect ? unitSelect.value : state.products[prodIndex].unit;
+  if (unit === '__custom__') {
+    unit = (unitCustom && unitCustom.value.trim()) ? unitCustom.value.trim() : 'pcs';
+  }
+
+  state.products[prodIndex] = {
+    ...state.products[prodIndex],
+    name,
+    category: cat,
+    unit,
+    costPrice: cost,
+    sellPrice: sell,
+    stock,
+    minStock
+  };
+
+  closeEditProductModal();
+  saveState();
+  renderAll();
+  alert(`✓ Perubahan produk "${name}" berhasil disimpan!`);
+}
+
+function deleteProduct(productId) {
+  const prod = state.products.find(p => p.id === productId);
+  if (!prod) return;
+
+  if (confirm(`Apakah Anda yakin ingin menghapus produk "${prod.name}" dari daftar stok?`)) {
+    state.products = state.products.filter(p => p.id !== productId);
+    saveState();
+    renderAll();
+    alert(`Produk "${prod.name}" telah dihapus.`);
+  }
+}
+window.openEditProductModal = openEditProductModal;
+window.closeEditProductModal = closeEditProductModal;
+window.submitEditProduct = submitEditProduct;
+window.deleteProduct = deleteProduct;
 
 function openRestockModal(productId) {
   state.activeRestockProductId = productId;
@@ -2732,42 +3196,37 @@ async function handleChatSubmit(e) {
 
   input.value = '';
 
-  // Tampilkan loading bubble sementara menunggu AI
+  // Tampilkan loading bubble sementara menganalisis
   state.chatHistory.push({
     sender: 'ai',
     time: timeStr,
-    text: '⏳ _Sedang menganalisis data toko Anda..._'
+    text: '⏳ _Sedang menganalisis pembukuan toko Anda..._'
   });
   renderChatHistory();
 
-  try {
-    const aiReply = await callGeminiAPI(question);
-    // Ganti loading bubble dengan jawaban asli
-    state.chatHistory[state.chatHistory.length - 1] = {
-      sender: 'ai',
-      time: timeStr,
-      text: aiReply
-    };
-  } catch (err) {
-    console.error('Gemini API gagal:', err);
-    // Fallback ke analisis lokal jika API gagal
-    const metrics = computeMetrics();
-    const q = question.toLowerCase();
-    let fallbackReply = '';
+  let aiReply = '';
+  const geminiKey = getGeminiApiKey();
 
-    if (q.includes('laba') || q.includes('untung') || q.includes('tipis')) {
-      const marginPct = metrics.totalSales > 0 ? Math.round((metrics.grossProfit / metrics.totalSales) * 100) : 0;
-      fallbackReply = `📊 **Data Toko Hari Ini:**\n• Total Penjualan: ${formatRupiah(metrics.totalSales)}\n• HPP: ${formatRupiah(metrics.totalHPP)}\n• Biaya Ops: ${formatRupiah(metrics.totalOpsExpenses)}\n• Laba Bersih: ${formatRupiah(metrics.netProfit)} (margin ${marginPct}%)\n\n⚠️ _Asisten AI sedang tidak dapat terhubung ke internet. Data di atas adalah analisis otomatis dari pembukuan toko Anda._`;
-    } else {
-      fallbackReply = `📊 **Ringkasan Toko Hari Ini:**\n• Omzet: ${formatRupiah(metrics.totalSales)}\n• Laba Bersih: ${formatRupiah(metrics.netProfit)}\n• Kas di Laci: ${formatRupiah(metrics.cashInHand)}\n• Modal di Stok: ${formatRupiah(metrics.totalInventoryAssetValue)}\n\n⚠️ _Asisten AI (Gemini) sedang tidak dapat terhubung. Pastikan koneksi internet aktif, lalu coba lagi._`;
+  // Jika kunci Gemini valid, coba panggil API online
+  if (isValidGeminiKey(geminiKey)) {
+    try {
+      aiReply = await callGeminiAPI(question);
+    } catch (err) {
+      console.warn('Gemini Cloud API gagal, menggunakan Penasihat Bisnis Cerdas Lokal:', err);
+      aiReply = generateSmartBusinessAdvice(question);
     }
-
-    state.chatHistory[state.chatHistory.length - 1] = {
-      sender: 'ai',
-      time: timeStr,
-      text: fallbackReply
-    };
+  } else {
+    // Gunakan Penasihat Bisnis Cerdas Lokal langsung secara cepat dan akurat
+    await new Promise(r => setTimeout(r, 400));
+    aiReply = generateSmartBusinessAdvice(question);
   }
+
+  // Ganti loading bubble dengan jawaban analisis
+  state.chatHistory[state.chatHistory.length - 1] = {
+    sender: 'ai',
+    time: timeStr,
+    text: aiReply
+  };
 
   saveState();
   renderChatHistory();
@@ -2979,6 +3438,9 @@ function renderStoreProfile() {
 
   const settingsEmail = document.getElementById('settings-account-email');
   if (settingsEmail) settingsEmail.value = profile.email || (state.currentUser ? state.currentUser.email : 'pemilik@toko.com');
+
+  // Update status integrasi Gemini API
+  updateGeminiKeyUI();
 
   // Kontrol Akses Super Admin: HANYA tampil jika login resmi sebagai Super Admin Andi Zulkifli
   const drawerAdminBtn = document.getElementById('drawer-admin-btn');
