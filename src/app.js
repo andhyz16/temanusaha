@@ -1,5 +1,113 @@
 // TemanUsaha - Logika Aplikasi & Asisten UMKM Indonesia
 
+// ==================== KONFIGURASI GEMINI AI ====================
+// Untuk mengaktifkan AI asisten yang cerdas, dapatkan API Key gratis di:
+// https://aistudio.google.com/apikey
+// Ganti nilai di bawah ini dengan API Key Anda
+const GEMINI_API_KEY = 'AQ.Ab8RN6K6SvV2daoQv4Z8ruW_8gZiYx3XhIUhPaUiUz5J2RQnLQ';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY;
+
+/**
+ * Membangun konteks data toko saat ini untuk dikirim ke Gemini AI.
+ */
+function buildBusinessContext() {
+  const metrics = computeMetrics ? computeMetrics() : {};
+  const profile = state.storeProfile || {};
+  const products = state.products || [];
+  const customers = state.customers || [];
+
+  const topProducts = [...products]
+    .sort((a, b) => (b.sellPrice - b.costPrice) * (b.dailySalesAvg || 1) - (a.sellPrice - a.costPrice) * (a.dailySalesAvg || 1))
+    .slice(0, 5)
+    .map(p => `  - ${p.name}: Harga Jual Rp${p.sellPrice.toLocaleString('id-ID')}, Modal Rp${p.costPrice.toLocaleString('id-ID')}, Stok ${p.stock} ${p.unit}, Avg ${p.dailySalesAvg || 0} ${p.unit}/hari`)
+    .join('\n');
+
+  const criticalStock = products
+    .filter(p => p.stock <= (p.minStock || 5))
+    .map(p => `  - ${p.name}: Sisa ${p.stock} ${p.unit} (min ${p.minStock || 5})`)
+    .join('\n') || '  - (Tidak ada stok kritis)';
+
+  const totalPiutang = customers.reduce((acc, c) => acc + (c.debt || 0), 0);
+  const piutangList = customers
+    .filter(c => (c.debt || 0) > 0)
+    .map(c => `  - ${c.name}: Rp${(c.debt || 0).toLocaleString('id-ID')}`)
+    .slice(0, 5)
+    .join('\n') || '  - (Tidak ada piutang)';
+
+  return `DATA TOKO SAAT INI (${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}):
+Nama Toko: ${profile.name || 'Toko TemanUsaha'}
+Jenis Usaha: ${profile.type || 'Umum'}
+Pemilik: ${profile.ownerName || '-'}
+
+KEUANGAN HARI INI:
+- Total Penjualan: Rp${(metrics.totalSales || 0).toLocaleString('id-ID')}
+- Modal Barang Terjual (HPP): Rp${(metrics.totalHPP || 0).toLocaleString('id-ID')}
+- Laba Kotor: Rp${(metrics.grossProfit || 0).toLocaleString('id-ID')}
+- Biaya Operasional: Rp${(metrics.totalOpsExpenses || 0).toLocaleString('id-ID')}
+- Uang Pribadi Diambil: Rp${(metrics.totalPersonalDraw || 0).toLocaleString('id-ID')}
+- Laba Bersih Riil: Rp${(metrics.netProfit || 0).toLocaleString('id-ID')}
+- Uang Kas di Laci (Fisik): Rp${(metrics.cashInHand || 0).toLocaleString('id-ID')}
+- Modal di Stok Barang: Rp${(metrics.totalInventoryAssetValue || 0).toLocaleString('id-ID')}
+
+PRODUK TERBAIK (5 Teratas berdasar kontribusi laba):
+${topProducts || '  - (Belum ada produk)'}
+
+STOK KRITIS (Perlu segera diisi ulang):
+${criticalStock}
+
+PIUTANG PELANGGAN (Total: Rp${totalPiutang.toLocaleString('id-ID')}):
+${piutangList}`;
+}
+
+/**
+ * Memanggil Gemini API dengan konteks data toko riil.
+ */
+async function callGeminiAPI(userQuestion) {
+  const businessContext = buildBusinessContext();
+  const storeName = (state.storeProfile && state.storeProfile.name) || 'Toko';
+  const businessType = (state.storeProfile && state.storeProfile.type) || 'usaha';
+
+  const systemInstruction = `Kamu adalah Asisten TemanUsaha, konsultan bisnis UMKM Indonesia yang cerdas, hangat, dan praktis. Kamu membantu pemilik ${businessType} bernama "${storeName}" untuk membuat keputusan bisnis yang tepat.
+
+Panduan menjawab:
+- Selalu gunakan data riil toko yang diberikan — jangan mengarang angka
+- Jawab dalam Bahasa Indonesia yang hangat dan mudah dipahami pemilik warung/toko kecil
+- Berikan saran tindakan yang KONKRET dan SPESIFIK, bukan teori umum
+- Jika ditanya sesuatu yang tidak ada datanya (misal data bulan lalu), jelaskan dengan jujur
+- Gunakan format yang mudah dibaca: bullet point, angka rupiah dengan format Indonesia
+- Jawab ringkas tapi bermakna — maksimal 4-5 paragraf pendek
+- Gunakan emoji sesekali agar terasa personal dan semangat (jangan berlebihan)
+
+${businessContext}`;
+
+  const requestBody = {
+    contents: [{
+      parts: [{ text: `${systemInstruction}\n\nPertanyaan pemilik toko: ${userQuestion}` }]
+    }],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 800,
+    }
+  };
+
+  const response = await fetch(GEMINI_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    console.error('Gemini API error:', response.status, errData);
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Empty response');
+  return text;
+}
+
 // ==================== DATA AWAL DEMO TOKO ====================
 const DEFAULT_PRODUCTS = [
   {
@@ -980,6 +1088,16 @@ function showPublicLandingPage() {
     // Pastikan tab pendaftaran aktif sebagai default
     switchAuthMode('register');
   }
+
+  // Reset semua field form registrasi (agar data toko lama tidak terisi ulang)
+  ['reg-store-name', 'reg-phone', 'reg-email', 'reg-pass', 'reg-pass-confirm'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const regLogoFile = document.getElementById('reg-logo-file');
+  if (regLogoFile) regLogoFile.value = '';
+  const regBusinessType = document.getElementById('reg-business-type');
+  if (regBusinessType) regBusinessType.selectedIndex = 0;
 }
 
 /**
@@ -1002,6 +1120,79 @@ function closeLandingAndLogin() {
 window.showPublicLandingPage = showPublicLandingPage;
 window.closeLandingAndRegister = closeLandingAndRegister;
 window.closeLandingAndLogin = closeLandingAndLogin;
+
+/**
+ * Memuat dan mengisolasi data spesifik milik toko tertentu (produk, pelanggan, transaksi, kas, profil).
+ * Menjamin bahwa produk setiap toko (misal Toko Pakaian berisi daster/gamis/hijab, bukan sembako) selalu tampil sesuai.
+ */
+function loadStoreData(storeObj) {
+  if (!storeObj || !storeObj.storeId) return;
+
+  const storeKey = 'temanusaha_store_data_' + storeObj.storeId;
+  let storeData = null;
+  try {
+    const raw = localStorage.getItem(storeKey);
+    if (raw) storeData = JSON.parse(raw);
+  } catch(e) {}
+
+  // Cek apakah data produk belum ada, atau jenis usahanya tidak cocok (misal Toko Pakaian tapi isinya Beras)
+  const isFashionMismatch = (storeObj.businessType === 'Toko Pakaian & Fashion' || storeObj.businessType === 'Pakaian & Fashion') &&
+                            (!storeData || !storeData.products || storeData.products.some(p => p.name.includes('Beras') || p.name.includes('Minyak')));
+
+  const isCulinaryMismatch = (storeObj.businessType === 'Warung Makan & Kuliner' || storeObj.businessType === 'Warung Makan & Minuman') &&
+                             (!storeData || !storeData.products || storeData.products.some(p => p.name.includes('Beras Pandan') || p.name.includes('Daster')));
+
+  const isHpMismatch = (storeObj.businessType === 'Konter Pulsa & Aksesoris HP' || storeObj.businessType === 'Elektronik & Gadget') &&
+                       (!storeData || !storeData.products || storeData.products.some(p => p.name.includes('Beras') || p.name.includes('Daster')));
+
+  const isBuildingMismatch = storeObj.businessType === 'Toko Bangunan & Perkakas' &&
+                             (!storeData || !storeData.products || storeData.products.some(p => p.name.includes('Beras') || p.name.includes('Daster')));
+
+  const isBengkelMismatch = storeObj.businessType === 'Bengkel & Sparepart' &&
+                            (!storeData || !storeData.products || storeData.products.some(p => p.name.includes('Beras') || p.name.includes('Daster')));
+
+  const needsFreshDemo = !storeData || !storeData.products || storeData.products.length === 0 ||
+                         isFashionMismatch || isCulinaryMismatch || isHpMismatch || isBuildingMismatch || isBengkelMismatch;
+
+  if (needsFreshDemo) {
+    const demo = getDemoDataForBusinessType(storeObj.businessType, storeObj.storeName);
+    storeData = {
+      products: demo.products,
+      customers: demo.customers,
+      transactions: demo.transactions,
+      initialCash: demo.initialCash || 1250000,
+      storeProfile: {
+        name: storeObj.storeName,
+        type: storeObj.businessType || 'Usaha UMKM',
+        phone: storeObj.phone || '',
+        email: storeObj.email || '',
+        logo: storeObj.logo || demo.logo || '🏪',
+        address: storeObj.address || 'Alamat Toko Belum Diatur'
+      },
+      subscription: {
+        plan: 'trial',
+        planName: 'Masa Uji Coba Gratis (30 Hari)',
+        status: 'active',
+        expiresAt: storeObj.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    };
+    try {
+      localStorage.setItem(storeKey, JSON.stringify(storeData));
+    } catch(e) {}
+  }
+
+  // Terapkan data ke state aktif aplikasi
+  state.products = storeData.products || [];
+  state.customers = storeData.customers || [];
+  state.transactions = storeData.transactions || [];
+  state.initialCash = storeData.initialCash || 1250000;
+  if (storeData.storeProfile) {
+    state.storeProfile = { ...DEFAULT_STORE_PROFILE, ...storeData.storeProfile };
+  }
+  if (storeData.subscription) {
+    state.subscription = { ...DEFAULT_SUBSCRIPTION, ...storeData.subscription };
+  }
+}
 
 function initApp() {
   // ==================== PEMBERSIHAN OTOMATIS SATU KALI ====================
@@ -1052,10 +1243,7 @@ function initApp() {
       if (!DUMMY_IDS.includes(parsedUser.storeId) && !DUMMY_EMAILS.includes(parsedUser.email)) {
         state.currentUser = parsedUser;
         if (state.currentUser.storeName && state.currentUser.role !== 'super_admin') {
-          state.storeProfile.name = state.currentUser.storeName;
-          state.storeProfile.type = state.currentUser.businessType || state.storeProfile.type;
-          state.storeProfile.phone = state.currentUser.phone || state.storeProfile.phone;
-          state.storeProfile.email = state.currentUser.email || state.storeProfile.email;
+          loadStoreData(state.currentUser);
         }
       } else {
         state.currentUser = null;
@@ -1077,14 +1265,7 @@ function initApp() {
     if (foundStore) {
       // Toko ditemukan: LANGSUNG BUKA DASHBOARD APLIKASI KASIR TOKO TERSEBUT
       state.currentUser = foundStore;
-      state.storeProfile = {
-        name: foundStore.storeName,
-        type: foundStore.businessType || 'Usaha UMKM',
-        phone: foundStore.phone || '',
-        email: foundStore.email || '',
-        logo: foundStore.logo || getBusinessEmoji(foundStore.businessType),
-        address: foundStore.address || 'Alamat Toko Belum Diatur'
-      };
+      loadStoreData(foundStore);
       
       localStorage.setItem('temanusaha_active_user', JSON.stringify(foundStore));
       document.title = `${foundStore.storeName} - TemanUsaha`;
@@ -1196,6 +1377,27 @@ function saveState() {
 
   // Simpan ke LocalStorage seketika
   localStorage.setItem('temanusaha_db_v1', JSON.stringify(payload));
+
+  // Simpan juga ke database khusus toko ini agar produknya selalu sesuai
+  if (state.currentUser && state.currentUser.storeId && state.currentUser.role !== 'super_admin') {
+    const storeKey = 'temanusaha_store_data_' + state.currentUser.storeId;
+    localStorage.setItem(storeKey, JSON.stringify(payload));
+
+    // Sinkronkan data ringkasan ke daftar akun registered
+    try {
+      let accounts = JSON.parse(localStorage.getItem('temanusaha_registered_accounts') || '[]');
+      const idx = accounts.findIndex(a => a.storeId === state.currentUser.storeId);
+      if (idx !== -1) {
+        accounts[idx].productsCount = (state.products || []).length;
+        accounts[idx].logo = state.storeProfile.logo;
+        accounts[idx].storeName = state.storeProfile.name;
+        accounts[idx].businessType = state.storeProfile.type;
+        accounts[idx].address = state.storeProfile.address;
+        accounts[idx].expiresAt = state.subscription.expiresAt;
+        localStorage.setItem('temanusaha_registered_accounts', JSON.stringify(accounts));
+      }
+    } catch(e) {}
+  }
 
   // Simpan ke Firebase Firestore secara asinkron (hanya jika ada akun toko login)
   if (typeof isFirebaseReady !== 'undefined' && isFirebaseReady && db && state.currentUser && state.currentUser.storeId && state.currentUser.role !== 'super_admin') {
@@ -2300,15 +2502,30 @@ function renderChatHistory() {
   const container = document.getElementById('chat-messages-container');
   if (!container) return;
 
+  // Render markdown dasar dari Gemini AI: bold, italic, bullet, newline
+  function formatAiText(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/_(.+?)_/g, '<em>$1</em>')
+      .replace(/^• (.+)$/gm, '<li class="ml-3">$1</li>')
+      .replace(/^- (.+)$/gm, '<li class="ml-3">$1</li>')
+      .replace(/^\d+\. (.+)$/gm, '<li class="ml-3 list-decimal">$1</li>')
+      .replace(/\n/g, '<br>');
+  }
+
   container.innerHTML = state.chatHistory.map(msg => {
     const isAi = msg.sender === 'ai';
+    const formattedText = isAi ? formatAiText(msg.text) : (msg.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>'));
     return `
       <div class="flex items-start space-x-2.5 ${isAi ? '' : 'flex-row-reverse space-x-reverse'}">
         <div class="w-8 h-8 rounded-full ${isAi ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-white'} flex items-center justify-center text-xs font-bold shrink-0">
           ${isAi ? 'TU' : 'Anda'}
         </div>
         <div class="max-w-lg p-3.5 rounded-2xl text-xs leading-relaxed ${isAi ? 'bg-white border border-slate-200 text-slate-800 shadow-sm' : 'bg-emerald-600 text-white'}">
-          <div class="whitespace-pre-line">${msg.text}</div>
+          <div class="space-y-0.5">${formattedText}</div>
           <span class="text-[9px] block mt-1.5 opacity-60 text-right">${msg.time}</span>
         </div>
       </div>
@@ -2323,7 +2540,7 @@ function askQuickPrompt(promptText) {
   handleChatSubmit(new Event('submit'));
 }
 
-function handleChatSubmit(e) {
+async function handleChatSubmit(e) {
   e.preventDefault();
   const input = document.getElementById('chat-input');
   const question = input.value.trim();
@@ -2340,51 +2557,46 @@ function handleChatSubmit(e) {
   });
 
   input.value = '';
+
+  // Tampilkan loading bubble sementara menunggu AI
+  state.chatHistory.push({
+    sender: 'ai',
+    time: timeStr,
+    text: '⏳ _Sedang menganalisis data toko Anda..._'
+  });
   renderChatHistory();
 
-  // AI menganalisis data riil
-  const metrics = computeMetrics();
-  const q = question.toLowerCase();
-  let aiReply = '';
-
-  if (q.includes('laba') || q.includes('untung') || q.includes('tipis') || q.includes('turun')) {
-    const marginPct = metrics.totalSales > 0 ? Math.round((metrics.grossProfit / metrics.totalSales) * 100) : 0;
-    aiReply = `Berdasarkan kalkulasi transaksi hari ini:\n\n• **Total Penjualan:** ${formatRupiah(metrics.totalSales)}\n• **Modal Pokok Barang (HPP):** ${formatRupiah(metrics.totalHPP)} (sekitar ${100 - marginPct}% dari omzet)\n• **Biaya Operasional Toko:** ${formatRupiah(metrics.totalOpsExpenses)}\n• **Laba Bersih Riil:** ${formatRupiah(metrics.netProfit)}\n\n💡 **Diagnosa TemanUsaha:**\nMargin laba kotor toko Anda berkisar **${marginPct}%**. Bila terasa tipis, penyebab terbesarnya adalah produk sembako pokok (beras, minyak, telur) memiliki margin kecil (8%-12%).\n\n🎯 **Saran Tindakan:**\nSetiap pelanggan beli beras/minyak, tawarkan produk dengan margin tebal di atas 20% seperti kopi sachet, saus, atau cemilan untuk mendongkrak keuntungan harian.`;
-  } else if (q.includes('paling untung') || q.includes('laris') || q.includes('produk mana')) {
-    const sorted = [...state.products].map(p => {
-      const marginRp = p.sellPrice - p.costPrice;
-      const marginPct = Math.round((marginRp / p.sellPrice) * 100);
-      const estDaily = marginRp * p.dailySalesAvg;
-      return { ...p, marginRp, marginPct, estDaily };
-    }).sort((a, b) => b.estDaily - a.estDaily);
-
-    const p1 = sorted[0];
-    const p2 = sorted[1];
-    aiReply = `Berikut data produk terbaik toko Anda:\n\n🥇 **Penyumbang Laba Harian Terbesar:**\n1. **${p1.name}**: Estimasi laba ${formatRupiah(p1.estDaily)}/hari (~${p1.dailySalesAvg} ${p1.unit}/hari, margin ${p1.marginPct}%)\n2. **${p2.name}**: Estimasi laba ${formatRupiah(p2.estDaily)}/hari\n\n🎯 **Saran TemanUsaha:**\nJangan sampai kedua barang ini kehabisan stok, karena inilah mesin penghasil uang kas harian toko Anda!`;
-  } else if (q.includes('modal') || q.includes('5 juta') || q.includes('uang')) {
-    const restockEst = metrics.criticalItems.reduce((acc, i) => acc + i.costEst, 0);
-    aiReply = `Jika Anda memiliki modal cadangan Rp 5 juta, berikut saran pembagian alokasi paling aman:\n\n1. **Belanja Barang Stok Kritis (40% - ~${formatRupiah(restockEst || 1500000)}):**\nAmankan barang cepat laku yang hampir habis (${metrics.criticalItems.map(i => i.name).join(', ') || 'Beras & Minyak'}).\n\n2. **Kas Cadangan Operasional (35% - Rp 1.750.000):**\nSimpan di rekening terpisah untuk antisipasi distributor naik harga mendadak.\n\n3. **Coba Produk Baru (15% - Rp 750.000):**\nBelanja produk yang sering ditanyakan tetangga tetapi belum Anda jual.\n\n4. **Hak Uang Pribadi (10% - Rp 500.000):**\nSisihkan untuk keperluan rumah tangga agar tidak mengganggu uang kas toko.`;
-  } else if (q.includes('pribadi') || q.includes('ambil uang') || q.includes('250')) {
-    if (metrics.isPersonalOverdrawn) {
-      aiReply = `⚠️ **Jangan Ambil Uang Kas Dulu Hari Ini!**\n\nCatatan Anda menunjukkan hari ini sudah diambil uang pribadi sebesar ${formatRupiah(metrics.totalPersonalDraw)}, padahal laba bersih baru ${formatRupiah(metrics.netProfit)}.\n\nSudah ada **${formatRupiah(metrics.capitalErosionAmount)} modal belanja barang yang tergerus**. Jika diambil Rp 250.000 lagi, modal belanja barang besok akan semakin kurang.`;
-    } else {
-      aiReply = `✅ **Aman untuk Diambil!**\n\nSetelah mengamankan modal belanja barang terjual (${formatRupiah(metrics.lockedRestockFund)}) dan biaya operasional, sisa laba bersih Anda saat ini adalah **${formatRupiah(metrics.safePersonalAllowance)}**.\n\nMengambil Rp 250.000 masih dalam batas aman dan tidak mengganggu modal belanja barang toko.`;
-    }
-  } else if (q.includes('karyawan') || q.includes('pegawai')) {
-    aiReply = `Mari kita hitung secara rasional tanpa tebak-tebakan:\n\n• Misalkan gaji 1 karyawan toko adalah Rp 1.500.000/bulan.\n• Rata-rata margin bersih toko Anda adalah ~12%.\n• Untuk menutup gaji tersebut, toko harus menghasilkan omzet tambahan minimal:\n  Rp 1.500.000 ÷ 12% = **Rp 12.500.000/bulan** (~Rp 420.000/hari).\n\n💡 **Kesimpulan TemanUsaha:**\nBila dengan ada karyawan Anda bisa fokus menambah omzet di atas Rp 420.000/hari (misal pesan antar grosir atau katering), maka merekrut karyawan **sangat layak**. Namun jika hanya untuk menjaga kasir sementara omzet tetap sama, sebaiknya gunakan pencatatan kilat ini terlebih dahulu.`;
-  } else {
-    aiReply = `Saya telah memeriksa pembukuan toko Anda hari ini:\n- Total omzet: ${formatRupiah(metrics.totalSales)}\n- Laba bersih: ${formatRupiah(metrics.netProfit)}\n- Sisa kas fisik di laci: ${formatRupiah(metrics.cashInHand)}\n- Modal tertahan di stok: ${formatRupiah(metrics.totalInventoryAssetValue)}\n\nAda yang perlu kita bahas lebih detail mengenai stok kritis, piutang, atau strategi penjualan?`;
-  }
-
-  setTimeout(() => {
-    state.chatHistory.push({
+  try {
+    const aiReply = await callGeminiAPI(question);
+    // Ganti loading bubble dengan jawaban asli
+    state.chatHistory[state.chatHistory.length - 1] = {
       sender: 'ai',
       time: timeStr,
       text: aiReply
-    });
-    saveState();
-    renderChatHistory();
-  }, 400);
+    };
+  } catch (err) {
+    console.error('Gemini API gagal:', err);
+    // Fallback ke analisis lokal jika API gagal
+    const metrics = computeMetrics();
+    const q = question.toLowerCase();
+    let fallbackReply = '';
+
+    if (q.includes('laba') || q.includes('untung') || q.includes('tipis')) {
+      const marginPct = metrics.totalSales > 0 ? Math.round((metrics.grossProfit / metrics.totalSales) * 100) : 0;
+      fallbackReply = `📊 **Data Toko Hari Ini:**\n• Total Penjualan: ${formatRupiah(metrics.totalSales)}\n• HPP: ${formatRupiah(metrics.totalHPP)}\n• Biaya Ops: ${formatRupiah(metrics.totalOpsExpenses)}\n• Laba Bersih: ${formatRupiah(metrics.netProfit)} (margin ${marginPct}%)\n\n⚠️ _Asisten AI sedang tidak dapat terhubung ke internet. Data di atas adalah analisis otomatis dari pembukuan toko Anda._`;
+    } else {
+      fallbackReply = `📊 **Ringkasan Toko Hari Ini:**\n• Omzet: ${formatRupiah(metrics.totalSales)}\n• Laba Bersih: ${formatRupiah(metrics.netProfit)}\n• Kas di Laci: ${formatRupiah(metrics.cashInHand)}\n• Modal di Stok: ${formatRupiah(metrics.totalInventoryAssetValue)}\n\n⚠️ _Asisten AI (Gemini) sedang tidak dapat terhubung. Pastikan koneksi internet aktif, lalu coba lagi._`;
+    }
+
+    state.chatHistory[state.chatHistory.length - 1] = {
+      sender: 'ai',
+      time: timeStr,
+      text: fallbackReply
+    };
+  }
+
+  saveState();
+  renderChatHistory();
 }
 
 // ==================== TAB 7: IDE PROMOSI & PEMASARAN ====================
@@ -2528,13 +2740,26 @@ function renderLogoElement(element, logoValue, altName = 'Logo Toko') {
 
 function renderStoreProfile() {
   const profile = state.storeProfile || DEFAULT_STORE_PROFILE;
+  const isAdmin = isSuperAdmin(state.currentUser);
 
   // Header Logo & Judul
   const headerLogo = document.getElementById('header-store-logo');
-  if (headerLogo) renderLogoElement(headerLogo, profile.logo, profile.name);
+  if (headerLogo) {
+    if (isAdmin) {
+      headerLogo.innerHTML = `<span class="flex items-center justify-center w-full h-full text-xl">👑</span>`;
+    } else {
+      renderLogoElement(headerLogo, profile.logo, profile.name);
+    }
+  }
 
   const storeTitle = document.getElementById('store-title');
-  if (storeTitle) storeTitle.innerText = `${profile.name} • ${profile.type}`;
+  if (storeTitle) {
+    if (isAdmin) {
+      storeTitle.innerText = `Pusat TemanUsaha • Super Admin System`;
+    } else {
+      storeTitle.innerText = `${profile.name} • ${profile.type}`;
+    }
+  }
 
   const userBtnLabel = document.getElementById('header-user-btn-label');
   if (userBtnLabel) {
@@ -2543,13 +2768,19 @@ function renderStoreProfile() {
 
   // Drawer (Menu Samping)
   const drawerLogo = document.getElementById('drawer-store-logo');
-  if (drawerLogo) renderLogoElement(drawerLogo, profile.logo, profile.name);
+  if (drawerLogo) {
+    if (isAdmin) {
+      drawerLogo.innerHTML = `<span class="flex items-center justify-center w-full h-full text-xl">👑</span>`;
+    } else {
+      renderLogoElement(drawerLogo, profile.logo, profile.name);
+    }
+  }
 
   const drawerName = document.getElementById('drawer-store-name');
-  if (drawerName) drawerName.innerText = profile.name;
+  if (drawerName) drawerName.innerText = isAdmin ? 'Super Admin Andi Zulkifli' : profile.name;
 
   const drawerType = document.getElementById('drawer-business-type');
-  if (drawerType) drawerType.innerText = profile.type;
+  if (drawerType) drawerType.innerText = isAdmin ? 'Pusat Kontrol & Lisensi UMKM' : profile.type;
 
   const drawerPhone = document.getElementById('drawer-user-phone');
   if (drawerPhone) {
@@ -2576,9 +2807,6 @@ function renderStoreProfile() {
   if (settingsEmail) settingsEmail.value = profile.email || (state.currentUser ? state.currentUser.email : 'pemilik@toko.com');
 
   // Kontrol Akses Super Admin: HANYA tampil jika login resmi sebagai Super Admin Andi Zulkifli
-  const isAdmin = isSuperAdmin(state.currentUser);
-  const headerAdminBtn = document.getElementById('header-admin-btn');
-  if (headerAdminBtn) headerAdminBtn.style.display = isAdmin ? 'flex' : 'none';
   const drawerAdminBtn = document.getElementById('drawer-admin-btn');
   if (drawerAdminBtn) drawerAdminBtn.style.display = isAdmin ? 'flex' : 'none';
 }
@@ -2704,6 +2932,31 @@ function handleChangePassword() {
 
 // ==================== MASA AKTIF & PERPANJANGAN SEWA ====================
 function updateSubscriptionUI() {
+  // SUPER ADMIN: AKSES PENUH PERMANEN / SELAMANYA
+  if (isSuperAdmin(state.currentUser)) {
+    const drawerSubStatus = document.getElementById('drawer-sub-status');
+    if (drawerSubStatus) {
+      drawerSubStatus.innerText = '👑 Super Admin (Akses Selamanya)';
+      drawerSubStatus.className = 'font-bold text-amber-300 text-[11px]';
+    }
+
+    const drawerBadgeSub = document.getElementById('drawer-badge-sub');
+    if (drawerBadgeSub) {
+      drawerBadgeSub.innerText = 'Super Admin';
+      drawerBadgeSub.className = 'text-[10px] bg-amber-400 text-slate-900 border border-amber-500 px-2 py-0.5 rounded-full font-extrabold';
+    }
+
+    const subCardBadge = document.getElementById('sub-card-badge');
+    if (subCardBadge) subCardBadge.innerText = '👑 Super Admin (Lisensi Permanen Selamanya)';
+
+    const subRemainingDays = document.getElementById('sub-remaining-days');
+    if (subRemainingDays) subRemainingDays.innerText = 'Aktif Selamanya';
+
+    const subExpiryDate = document.getElementById('sub-expiry-date');
+    if (subExpiryDate) subExpiryDate.innerText = 'Akses Penuh Tanpa Batas Waktu';
+    return;
+  }
+
   if (!state.subscription || !state.subscription.expiresAt) {
     state.subscription = { ...DEFAULT_SUBSCRIPTION };
   }
@@ -2721,18 +2974,6 @@ function updateSubscriptionUI() {
     month: 'short',
     year: 'numeric'
   });
-
-  // Header Badge
-  const headerSubText = document.getElementById('header-subscription-text');
-  if (headerSubText) {
-    if (isExpired) {
-      headerSubText.innerText = 'Sewa Habis';
-    } else if (state.subscription.plan === 'trial') {
-      headerSubText.innerText = `Trial ${remainingDays} Hari`;
-    } else {
-      headerSubText.innerText = `Aktif ${remainingDays} Hari`;
-    }
-  }
 
   // Drawer Badge
   const drawerSubStatus = document.getElementById('drawer-sub-status');
@@ -2806,16 +3047,17 @@ function confirmPaymentWhatsApp() {
   const store = state.storeProfile || DEFAULT_STORE_PROFILE;
   const user = state.currentUser || {};
 
-  const message = `Halo Admin TemanUsaha, saya telah melakukan transfer untuk perpanjangan sewa aplikasi:\n\n• Nama Toko: ${store.name}\n• Paket: ${plan.name}\n• Nominal: ${formatRupiah(plan.amount)}\n• No HP / Email: ${user.phone || store.phone || user.email || '-'}\n\nMohon dicek dan diperpanjang masa aktif akun toko saya. Terima kasih!`;
+  const message = `Halo Super Admin TemanUsaha (Pak Andi), saya ingin melakukan perpanjangan sewa aplikasi kasir:\n\n• Nama Toko: ${store.name}\n• Jenis Usaha: ${store.type}\n• Paket: ${plan.name}\n• Nominal: ${formatRupiah(plan.amount)}\n• No HP Toko: ${user.phone || store.phone || '-'}\n• Email: ${user.email || store.email || '-'}\n\nMohon bantuannya untuk aktivasi perpanjangan sewa toko saya. Terima kasih!`;
 
-  const url = `https://api.whatsapp.com/send?phone=6281234567890&text=${encodeURIComponent(message)}`;
+  const url = `https://api.whatsapp.com/send?phone=6282299777924&text=${encodeURIComponent(message)}`;
   window.open(url, '_blank');
   closePaymentModal();
 }
 
 function contactAdminWhatsApp(subject) {
-  const message = `Halo Admin TemanUsaha, saya butuh informasi seputar: ${subject || 'Aplikasi TemanUsaha'}.`;
-  const url = `https://api.whatsapp.com/send?phone=6281234567890&text=${encodeURIComponent(message)}`;
+  const store = state.storeProfile || DEFAULT_STORE_PROFILE;
+  const message = `Halo Super Admin TemanUsaha (Pak Andi), saya pemilik Toko "${store.name}".\nSaya butuh informasi seputar: ${subject || 'Aplikasi TemanUsaha'}.`;
+  const url = `https://api.whatsapp.com/send?phone=6282299777924&text=${encodeURIComponent(message)}`;
   window.open(url, '_blank');
 }
 
@@ -3000,6 +3242,8 @@ async function handleRegisterSubmit(event) {
     password: pass,
     slug: slug,
     logo: chosenLogo,
+    productsCount: (demoData.products || []).length,
+    expiresAt: trialExpires,
     createdAt: new Date().toISOString()
   };
 
@@ -3258,12 +3502,7 @@ function handleLoginSubmit(event) {
     }
 
     if (userToSave.role !== 'super_admin') {
-      state.storeProfile.name = userToSave.storeName || state.storeProfile.name;
-      state.storeProfile.type = userToSave.businessType || state.storeProfile.type;
-      state.storeProfile.phone = userToSave.phone || state.storeProfile.phone;
-      state.storeProfile.email = userToSave.email || state.storeProfile.email;
-      if (userToSave.logo) state.storeProfile.logo = userToSave.logo;
-      if (userToSave.address) state.storeProfile.address = userToSave.address;
+      loadStoreData(userToSave);
     }
 
     saveState();
@@ -3271,8 +3510,7 @@ function handleLoginSubmit(event) {
     renderAll();
 
     if (isSuperAdmin(userToSave)) {
-      alert(`👑 Selamat datang Bapak Andi Zulkifli!\nAnda masuk sebagai SUPER ADMIN TemanUsaha dengan akses kontrol penuh seluruh toko & lisensi.`);
-      openSuperAdminModal();
+      alert(`👑 Selamat datang Bapak Andi Zulkifli!\nAnda masuk sebagai SUPER ADMIN TemanUsaha.`);
     } else {
       alert(`👋 Selamat datang kembali di Toko "${userToSave.storeName}"!`);
     }
@@ -3474,7 +3712,7 @@ function renderAdminMemberList() {
         <div class="flex flex-wrap items-center gap-3 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
           <div class="flex items-center space-x-1 text-slate-700">
             <span>📦</span>
-            <span class="font-bold">${acc.productsCount || 3} Produk</span>
+            <span class="font-bold">${acc.productsCount !== undefined ? acc.productsCount : 8} Produk</span>
           </div>
           <span class="text-slate-300">•</span>
           <div class="flex items-center space-x-1 text-slate-700">
@@ -3619,18 +3857,11 @@ function adminSwitchToStore(storeId) {
   if (!acc) return;
 
   if (confirm(`Beralih ke Toko "${acc.storeName}" di layar kasir?`)) {
-    state.storeProfile.name = acc.storeName;
-    state.storeProfile.type = acc.businessType || state.storeProfile.type;
-    state.storeProfile.phone = acc.phone || state.storeProfile.phone;
-    state.storeProfile.email = acc.email || state.storeProfile.email;
-    state.storeProfile.logo = acc.logo || '🏪';
-    if (acc.expiresAt) {
-      state.subscription.expiresAt = acc.expiresAt;
-    }
+    loadStoreData(acc);
     saveState();
     closeSuperAdminModal();
     renderAll();
-    alert(`Sekarang menampilkan data Toko "${acc.storeName}".`);
+    alert(`Sekarang menampilkan data & produk Toko "${acc.storeName}" (${acc.businessType || 'Usaha UMKM'}).`);
   }
 }
 
@@ -3845,6 +4076,13 @@ window.renderLogoElement = renderLogoElement;
 window.getDemoDataForBusinessType = getDemoDataForBusinessType;
 window.selectStoreLogo = selectStoreLogo;
 window.handleRegisterSubmit = handleRegisterSubmit;
+window.loadStoreData = loadStoreData;
+window.isSuperAdmin = isSuperAdmin;
+window.confirmPaymentWhatsApp = confirmPaymentWhatsApp;
+window.contactAdminWhatsApp = contactAdminWhatsApp;
+window.updateSubscriptionUI = updateSubscriptionUI;
+window.adminSwitchToStore = adminSwitchToStore;
+window.state = state;
 
 // Jalankan aplikasi saat dokumen siap
 window.addEventListener('DOMContentLoaded', () => {
