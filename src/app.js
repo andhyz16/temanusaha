@@ -248,7 +248,403 @@ function setCloudStatus(status, text) {
   }
 }
 
+// ==================== STORE LANDING PAGE (untuk URL slug toko) ====================
+
+/**
+ * Tampilkan halaman profil publik toko ketika seseorang mengakses URL slug toko.
+ * Contoh: https://andhyz16.github.io/temanusaha/humairasembako
+ */
+function showStoreLandingPage(store) {
+  // Sembunyikan app shell utama
+  const appMain = document.getElementById('main-app-shell');
+  if (appMain) appMain.style.display = 'none';
+  
+  const header = document.getElementById('main-header');
+  if (header) header.style.display = 'none';
+  
+  // Update judul halaman
+  document.title = `${store.storeName} - TemanUsaha`;
+  
+  // Buat overlay landing page toko
+  const overlay = document.createElement('div');
+  overlay.id = 'store-public-page';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9000;overflow-y:auto;background:#f8fafc;';
+  
+  const businessEmoji = getBusinessEmoji(store.businessType);
+  const baseUrl = 'https://andhyz16.github.io/temanusaha';
+  const storeUrl = `${baseUrl}/${store.slug || generateSlug(store.storeName)}`;
+  
+  overlay.innerHTML = `
+    <!-- Header Navigasi TemanUsaha -->
+    <div style="background:linear-gradient(135deg,#064e3b,#065f46);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+      <a href="${baseUrl}/" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <div style="width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">🤝</div>
+        <span style="color:white;font-weight:800;font-size:14px;">TemanUsaha</span>
+      </a>
+      <button onclick="openAuthModal()" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+        Daftar / Masuk Toko
+      </button>
+    </div>
+    
+    <!-- Hero Card Toko -->
+    <div style="max-width:480px;margin:0 auto;padding:24px 16px;">
+      <div style="background:white;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);margin-bottom:16px;">
+        <!-- Banner Toko -->
+        <div style="background:linear-gradient(135deg,#064e3b,#047857,#059669);padding:32px 24px;text-align:center;position:relative;">
+          <div style="width:72px;height:72px;background:rgba(255,255,255,0.15);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;border:3px solid rgba(255,255,255,0.3);">
+            ${businessEmoji}
+          </div>
+          <h1 style="color:white;font-size:22px;font-weight:800;margin:0 0 4px;">${store.storeName}</h1>
+          <div style="color:rgba(255,255,255,0.8);font-size:13px;">${store.businessType || 'Usaha UMKM'}</div>
+          <div style="margin-top:12px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 12px;">
+            <span style="width:8px;height:8px;background:#4ade80;border-radius:50%;display:inline-block;"></span>
+            <span style="color:white;font-size:11px;font-weight:600;">Toko Resmi TemanUsaha</span>
+          </div>
+        </div>
+        
+        <!-- Info Toko -->
+        <div style="padding:20px 24px;">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            ${store.phone ? `<div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:36px;height:36px;background:#ecfdf5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📱</div>
+              <div>
+                <div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Nomor WhatsApp</div>
+                <div style="font-size:14px;font-weight:700;color:#0f172a;">+62${store.phone.replace(/^0/, '')}</div>
+              </div>
+            </div>` : ''}
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:36px;height:36px;background:#ecfdf5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🔗</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Alamat Toko Online</div>
+                <div style="font-size:11px;color:#059669;font-weight:700;word-break:break-all;">${storeUrl}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tombol Hubungi -->
+          ${store.phone ? `<a href="https://wa.me/62${store.phone.replace(/^0/, '')}?text=Halo%20${encodeURIComponent(store.storeName)}%2C%20saya%20mau%20bertanya%20tentang%20produk%20Anda" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;background:#25D366;color:white;text-decoration:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;">
+            <span>💬</span>
+            <span>Hubungi via WhatsApp</span>
+          </a>` : ''}
+        </div>
+      </div>
+      
+      <!-- Powered by TemanUsaha -->
+      <div style="text-align:center;padding:16px;">
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">Toko ini menggunakan aplikasi kasir</div>
+        <a href="${baseUrl}/" style="display:inline-flex;align-items:center;gap:8px;background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px 16px;text-decoration:none;">
+          <span style="font-size:16px;">🤝</span>
+          <div style="text-align:left;">
+            <div style="font-size:13px;font-weight:800;color:#064e3b;">TemanUsaha</div>
+            <div style="font-size:10px;color:#64748b;">Sahabat Bisnis UMKM Indonesia</div>
+          </div>
+        </a>
+        
+        <div style="margin-top:16px;">
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Ingin punya toko online seperti ini?</div>
+          <button onclick="openAuthModal()" style="background:linear-gradient(135deg,#059669,#047857);color:white;border:none;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;width:100%;">
+            🆓 Daftar Gratis 30 Hari Sekarang!
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.prepend(overlay);
+  
+  // Tampilkan auth modal setelah delay jika user belum login
+  if (!state.currentUser) {
+    // Jangan buka auth modal otomatis — biarkan user klik sendiri dari tombol
+    // Tapi siapkan auth modal agar bisa dibuka
+  }
+}
+
+/**
+ * Tampilkan halaman "Toko Tidak Ditemukan" jika slug tidak ada di database.
+ */
+function showStoreNotFound(slug) {
+  const header = document.getElementById('main-header');
+  if (header) header.style.display = 'none';
+  
+  const appMain = document.getElementById('main-app-shell');
+  if (appMain) appMain.style.display = 'none';
+  
+  document.title = 'Toko Tidak Ditemukan - TemanUsaha';
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'store-not-found-page';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9000;overflow-y:auto;background:#f8fafc;';
+  
+  const baseUrl = 'https://andhyz16.github.io/temanusaha';
+  
+  overlay.innerHTML = `
+    <div style="background:linear-gradient(135deg,#064e3b,#065f46);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+      <a href="${baseUrl}/" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <span style="color:white;font-weight:800;font-size:14px;">🤝 TemanUsaha</span>
+      </a>
+    </div>
+    <div style="max-width:400px;margin:60px auto;padding:24px;text-align:center;">
+      <div style="font-size:64px;margin-bottom:16px;">🏪</div>
+      <h1 style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:8px;">Toko Tidak Ditemukan</h1>
+      <p style="color:#64748b;font-size:14px;margin-bottom:24px;">Toko dengan alamat "<strong>${slug}</strong>" belum terdaftar di TemanUsaha.</p>
+      <a href="${baseUrl}/" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#059669,#047857);color:white;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:700;font-size:14px;">
+        ← Kembali ke Beranda
+      </a>
+    </div>
+  `;
+  
+  document.body.prepend(overlay);
+}
+
+/**
+ * Mendapatkan emoji berdasarkan jenis usaha.
+ */
+function getBusinessEmoji(businessType) {
+  const emojiMap = {
+    'Sembako & Kebutuhan Harian': '🛒',
+    'Warung Makan & Minuman': '🍜',
+    'Pakaian & Fashion': '👗',
+    'Elektronik & Gadget': '📱',
+    'Kosmetik & Kecantikan': '💄',
+    'Perabot Rumah Tangga': '🏠',
+    'Toko Kelontong': '🏪',
+    'Apotek & Kesehatan': '💊',
+    'Toko Online': '🛍️',
+  };
+  return emojiMap[businessType] || '🏪';
+}
+
+// ==================== PUBLIC LANDING PAGE ====================
+
+/**
+ * Tampilkan halaman landing publik TemanUsaha saat user belum login
+ * dan tidak mengakses slug toko tertentu.
+ */
+function showPublicLandingPage() {
+  const appMain = document.getElementById('main-app-shell');
+  if (appMain) appMain.style.display = 'none';
+  const header = document.getElementById('main-header');
+  if (header) header.style.display = 'none';
+  const sideMenu = document.getElementById('side-menu-container');
+  if (sideMenu) sideMenu.style.display = 'none';
+
+  document.title = 'TemanUsaha - Sahabat Bisnis & Kasir Pintar UMKM Indonesia';
+
+  // Hapus landing page lama jika ada
+  const oldLanding = document.getElementById('public-landing-page');
+  if (oldLanding) oldLanding.remove();
+
+  const landing = document.createElement('div');
+  landing.id = 'public-landing-page';
+  landing.style.cssText = 'position:fixed;inset:0;z-index:8000;overflow-y:auto;background:#0f172a;';
+
+  landing.innerHTML = `
+    <!-- STICKY NAVBAR -->
+    <nav style="position:sticky;top:0;z-index:100;background:rgba(15,23,42,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.06);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;background:linear-gradient(135deg,#059669,#047857);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">🤝</div>
+        <span style="color:white;font-weight:800;font-size:18px;letter-spacing:-0.5px;">TemanUsaha</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="closeLandingAndLogin()" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.12);padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">
+          Masuk Toko
+        </button>
+        <button onclick="closeLandingAndRegister()" style="background:linear-gradient(135deg,#059669,#047857);color:white;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">
+          Daftar Gratis
+        </button>
+      </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section style="background:linear-gradient(135deg,#0f172a 0%,#064e3b 60%,#065f46 100%);padding:60px 20px 80px;text-align:center;position:relative;overflow:hidden;">
+      <!-- Decorative circles -->
+      <div style="position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(5,150,105,0.1);pointer-events:none;"></div>
+      <div style="position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:rgba(4,120,87,0.08);pointer-events:none;"></div>
+      
+      <div style="position:relative;max-width:600px;margin:0 auto;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(5,150,105,0.2);border:1px solid rgba(5,150,105,0.4);border-radius:20px;padding:6px 14px;margin-bottom:24px;">
+          <span style="color:#4ade80;font-size:12px;">●</span>
+          <span style="color:#a7f3d0;font-size:12px;font-weight:600;">Gratis 30 Hari · Tanpa Kartu Kredit</span>
+        </div>
+        
+        <h1 style="color:white;font-size:clamp(28px,7vw,52px);font-weight:800;line-height:1.15;margin:0 0 20px;letter-spacing:-1px;">
+          Kelola Toko UMKM<br>
+          <span style="color:#4ade80;">Lebih Cerdas</span> & Rapi
+        </h1>
+        <p style="color:rgba(255,255,255,0.7);font-size:clamp(14px,3.5vw,18px);max-width:460px;margin:0 auto 36px;line-height:1.6;">
+          Aplikasi kasir, stok, piutang & analisis laba bersih untuk warung, toko kelontong, dan UMKM Indonesia.
+        </p>
+        
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+          <button onclick="closeLandingAndRegister()" style="background:linear-gradient(135deg,#059669,#047857);color:white;border:none;padding:16px 36px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(5,150,105,0.4);width:100%;max-width:320px;">
+            🆓 Coba Gratis 30 Hari Sekarang
+          </button>
+          <button onclick="closeLandingAndLogin()" style="background:transparent;color:rgba(255,255,255,0.6);border:none;font-size:13px;cursor:pointer;text-decoration:underline;">
+            Sudah punya akun? Masuk toko →
+          </button>
+        </div>
+        
+        <!-- Stats Row -->
+        <div style="display:flex;justify-content:center;gap:32px;margin-top:48px;flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="color:#4ade80;font-size:22px;font-weight:800;">100%</div>
+            <div style="color:rgba(255,255,255,0.5);font-size:11px;">Gratis Trial</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="color:#4ade80;font-size:22px;font-weight:800;">0</div>
+            <div style="color:rgba(255,255,255,0.5);font-size:11px;">Biaya Tersembunyi</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="color:#4ade80;font-size:22px;font-weight:800;">24/7</div>
+            <div style="color:rgba(255,255,255,0.5);font-size:11px;">Akses Kapan Saja</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FITUR UTAMA -->
+    <section style="padding:60px 20px;background:#0f172a;">
+      <div style="max-width:600px;margin:0 auto;">
+        <div style="text-align:center;margin-bottom:40px;">
+          <h2 style="color:white;font-size:clamp(20px,5vw,30px);font-weight:800;margin:0 0 8px;">Semua yang Dibutuhkan Toko Anda</h2>
+          <p style="color:rgba(255,255,255,0.5);font-size:14px;">Dari kasir hingga analisis bisnis, dalam satu aplikasi</p>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          ${[
+            ['💵','Kasir & Catat Transaksi','Catat setiap penjualan tunai, bon & transfer dengan cepat','from-emerald-900 to-emerald-800'],
+            ['📦','Stok & Belanja Barang','Pantau stok, HPP & alert barang hampir habis otomatis','from-blue-900 to-blue-800'],
+            ['📋','Buku Piutang','Kelola bon pelanggan, kirim tagihan via WhatsApp langsung','from-orange-900 to-orange-800'],
+            ['📊','Laba Bersih Riil','Lihat laba setelah HPP, bukan sekadar omzet kotor','from-purple-900 to-purple-800'],
+            ['🏷️','Kalkulator Harga','Hitung harga jual ecer & grosir agar tidak rugi','from-teal-900 to-teal-800'],
+            ['💬','Asisten AI Bisnis','Tanya konsultasi bisnis berdasar data nyata toko Anda','from-pink-900 to-pink-800'],
+          ].map(([emoji, title, desc]) => `
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px;">
+              <div style="font-size:24px;margin-bottom:8px;">${emoji}</div>
+              <div style="color:white;font-weight:700;font-size:13px;margin-bottom:4px;">${title}</div>
+              <div style="color:rgba(255,255,255,0.45);font-size:11px;line-height:1.5;">${desc}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </section>
+
+    <!-- HARGA -->
+    <section style="padding:60px 20px;background:linear-gradient(180deg,#0f172a,#0d1a2e);">
+      <div style="max-width:600px;margin:0 auto;">
+        <div style="text-align:center;margin-bottom:40px;">
+          <h2 style="color:white;font-size:clamp(20px,5vw,30px);font-weight:800;margin:0 0 8px;">Harga Terjangkau untuk UMKM</h2>
+          <p style="color:rgba(255,255,255,0.5);font-size:14px;">Mulai gratis, lanjut dengan harga yang tidak membebani</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <!-- Trial Card -->
+          <div style="background:linear-gradient(135deg,rgba(5,150,105,0.2),rgba(4,120,87,0.1));border:1.5px solid rgba(5,150,105,0.5);border-radius:16px;padding:20px;text-align:center;">
+            <div style="color:#4ade80;font-size:12px;font-weight:700;margin-bottom:6px;">🎁 UNTUK PENDAFTAR BARU</div>
+            <div style="color:white;font-size:28px;font-weight:800;margin-bottom:4px;">GRATIS</div>
+            <div style="color:rgba(255,255,255,0.6);font-size:13px;">30 Hari Penuh • Semua Fitur Aktif</div>
+          </div>
+
+          <!-- Paid Plans -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px;text-align:center;">
+              <div style="color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;margin-bottom:6px;">STANDAR</div>
+              <div style="color:white;font-size:14px;font-weight:800;">Rp 30rb</div>
+              <div style="color:rgba(255,255,255,0.4);font-size:10px;">/bulan</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:6px;">1 Bulan</div>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(5,150,105,0.15),rgba(4,120,87,0.08));border:1.5px solid rgba(5,150,105,0.4);border-radius:14px;padding:16px;text-align:center;position:relative;">
+              <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#059669;color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;">HEMAT</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;margin-bottom:6px;">PREMIUM</div>
+              <div style="color:white;font-size:14px;font-weight:800;">Rp 25rb</div>
+              <div style="color:rgba(255,255,255,0.4);font-size:10px;">/bulan</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:6px;">6 Bulan</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px;text-align:center;">
+              <div style="color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;margin-bottom:6px;">EKSKLUSIF</div>
+              <div style="color:white;font-size:14px;font-weight:800;">Rp 20rb</div>
+              <div style="color:rgba(255,255,255,0.4);font-size:10px;">/bulan</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:6px;">12 Bulan</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA BOTTOM -->
+    <section style="padding:60px 20px;background:#064e3b;text-align:center;">
+      <div style="max-width:480px;margin:0 auto;">
+        <div style="font-size:40px;margin-bottom:16px;">🤝</div>
+        <h2 style="color:white;font-size:clamp(20px,5vw,28px);font-weight:800;margin:0 0 12px;">Gabungkan Toko Anda Sekarang</h2>
+        <p style="color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:28px;line-height:1.6;">
+          Tidak perlu instalasi aplikasi. Buka di browser langsung dari HP Anda.
+        </p>
+        <button onclick="closeLandingAndRegister()" style="background:white;color:#064e3b;border:none;padding:16px 36px;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:block;width:100%;margin-bottom:12px;box-shadow:0 8px 24px rgba(0,0,0,0.2);">
+          🆓 Daftar Toko Gratis Sekarang
+        </button>
+        <p style="color:rgba(255,255,255,0.5);font-size:12px;">
+          Butuh bantuan? 
+          <a href="https://wa.me/6282299777924?text=Halo%20TemanUsaha%2C%20saya%20mau%20tanya..." target="_blank" style="color:#4ade80;text-decoration:none;font-weight:700;">
+            Hubungi Admin via WhatsApp →
+          </a>
+        </p>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer style="background:#0f172a;border-top:1px solid rgba(255,255,255,0.06);padding:24px 20px;text-align:center;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:18px;">🤝</span>
+        <span style="color:white;font-weight:800;font-size:14px;">TemanUsaha</span>
+      </div>
+      <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;">Sahabat Bisnis UMKM Indonesia · © 2025</p>
+    </footer>
+  `;
+
+  document.body.prepend(landing);
+}
+
+/**
+ * Menutup landing page dan membuka form registrasi.
+ */
+function closeLandingAndRegister() {
+  const landing = document.getElementById('public-landing-page');
+  if (landing) landing.remove();
+  
+  const appMain = document.getElementById('main-app-shell');
+  if (appMain) appMain.style.display = '';
+  const header = document.getElementById('main-header');
+  if (header) header.style.display = '';
+  const sideMenu = document.getElementById('side-menu-container');
+  if (sideMenu) sideMenu.style.display = '';
+  
+  openAuthModal();
+  setTimeout(() => switchAuthMode('register'), 50);
+}
+
+/**
+ * Menutup landing page dan membuka form login.
+ */
+function closeLandingAndLogin() {
+  const landing = document.getElementById('public-landing-page');
+  if (landing) landing.remove();
+  
+  const appMain = document.getElementById('main-app-shell');
+  if (appMain) appMain.style.display = '';
+  const header = document.getElementById('main-header');
+  if (header) header.style.display = '';
+  const sideMenu = document.getElementById('side-menu-container');
+  if (sideMenu) sideMenu.style.display = '';
+  
+  openAuthModal();
+  setTimeout(() => switchAuthMode('login'), 50);
+}
+
 function initApp() {
+  // ==================== CEK URL ROUTING (?toko=slug) ====================
+  // Jika ada parameter ?toko=namatoko di URL, muat data toko tersebut
+  const urlSlug = getTokoSlugFromURL();
+  
   // 1. Muat dari LocalStorage dulu untuk respon instan
   const savedState = localStorage.getItem('temanusaha_db_v1');
   if (savedState) {
@@ -288,6 +684,44 @@ function initApp() {
     } catch (e) {}
   }
 
+  // ==================== HANDLE URL SLUG ROUTING ====================
+  // Jika URL berisi ?toko=slug, coba muat toko yang sesuai
+  if (urlSlug) {
+    let accounts = [];
+    try {
+      const raw = localStorage.getItem('temanusaha_registered_accounts');
+      if (raw) accounts = JSON.parse(raw);
+    } catch(e) {}
+    
+    const foundStore = accounts.find(a => a.slug === urlSlug || generateSlug(a.storeName) === urlSlug);
+    
+    if (foundStore) {
+      // Toko ditemukan — cek apakah pengguna saat ini adalah pemilik toko ini
+      if (state.currentUser && state.currentUser.storeId === foundStore.storeId) {
+        // Pemilik toko mengakses toko sendiri — tampilkan dashboard seperti biasa
+        state.storeProfile.name = foundStore.storeName;
+        state.storeProfile.type = foundStore.businessType || state.storeProfile.type;
+        document.title = `${foundStore.storeName} - TemanUsaha`;
+      } else if (!state.currentUser) {
+        // Pengunjung belum login — tampilkan landing page publik toko ini (hanya info)
+        // Simpan slug yang dikunjungi untuk referensi
+        state.visitingSlug = urlSlug;
+        state.visitingStore = foundStore;
+        
+        // Tampilkan landing page toko (bukan auth modal — akan ditangani oleh showStoreLandingPage)
+        setTimeout(() => showStoreLandingPage(foundStore), 100);
+      } else {
+        // Pengguna login sebagai toko lain sedang mengakses toko ini — tampilkan info toko
+        state.visitingSlug = urlSlug;
+        state.visitingStore = foundStore;
+        setTimeout(() => showStoreLandingPage(foundStore), 100);
+      }
+    } else {
+      // Slug tidak ditemukan — tampilkan pesan 404 toko
+      setTimeout(() => showStoreNotFound(urlSlug), 100);
+    }
+  }
+
   // Set default due date to tomorrow
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const cartDueEl = document.getElementById('cart-due-date');
@@ -299,9 +733,14 @@ function initApp() {
   calculatePricingTiers();
   renderAll();
 
-  // Tampilan awal: Buka form pendaftaran / masuk toko secara otomatis jika pengguna belum login
-  if (!state.currentUser) {
-    openAuthModal();
+  // Tampilan awal: Tampilkan Landing Page atau Auth Modal
+  // KECUALI jika sedang mengunjungi profil toko orang lain (sudah ditangani di atas)
+  if (!state.currentUser && !urlSlug) {
+    // User belum login dan tidak ada slug toko — tampilkan landing page publik
+    showPublicLandingPage();
+  } else if (!state.currentUser && urlSlug) {
+    // Jika ada slug tapi bukan pemilik — openAuthModal sudah ditangani di showStoreLandingPage
+    // Jangan buka auth modal otomatis
   }
 
   // 2. Hubungkan ke Firebase Firestore Cloud Sync
@@ -2021,6 +2460,16 @@ function handleRegisterSubmit(event) {
   // Buat akun baru dengan Free Trial 1 Bulan (30 Hari)
   const storeId = 'store-' + Date.now();
   const trialExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  
+  // Generate slug URL unik untuk toko ini
+  const baseSlug = generateSlug(storeName);
+  let slug = baseSlug;
+  // Pastikan slug unik (jika sudah ada, tambahkan angka)
+  let slugCounter = 1;
+  while (accounts.find(a => a.slug === slug)) {
+    slug = baseSlug + slugCounter;
+    slugCounter++;
+  }
 
   const newAccount = {
     storeId: storeId,
@@ -2029,6 +2478,7 @@ function handleRegisterSubmit(event) {
     phone: phone,
     email: email,
     password: pass,
+    slug: slug,
     createdAt: new Date().toISOString()
   };
 
@@ -2057,7 +2507,80 @@ function handleRegisterSubmit(event) {
   closeAuthModal();
   renderAll();
 
+  // Tampilkan URL toko setelah registrasi berhasil
+  setTimeout(() => showStoreURLNotification(slug), 800);
+
   alert(`🎉 Selamat! Toko "${storeName}" berhasil didaftarkan.\n\nAnda mendapatkan GRATIS 1 BULAN (30 Hari) masa sewa aplikasi TemanUsaha dengan akses semua fitur kasir dan asisten cerdas.`);
+}
+
+// ==================== SLUG & URL ROUTING ====================
+
+/**
+ * Menghasilkan slug URL dari nama toko.
+ * Contoh: "Humaira Sembako & Harian" → "humairasembako"
+ */
+function generateSlug(storeName) {
+  return storeName
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // hapus aksen
+    .replace(/[^a-z0-9\s]/g, '')     // hapus karakter spesial
+    .replace(/\s+/g, '')              // hapus spasi
+    .substring(0, 30);
+}
+
+/**
+ * Mengambil parameter URL ?toko= dari query string.
+ * Digunakan saat pertama kali halaman dibuka.
+ */
+function getTokoSlugFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('toko') || null;
+}
+
+/**
+ * Menampilkan notifikasi URL toko setelah registrasi berhasil.
+ */
+function showStoreURLNotification(slug) {
+  const baseUrl = 'https://andhyz16.github.io/temanusaha';
+  const storeUrl = `${baseUrl}/${slug}`;
+  
+  const notif = document.createElement('div');
+  notif.id = 'store-url-notif';
+  notif.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[92vw] max-w-md';
+  notif.innerHTML = `
+    <div class="bg-white border border-emerald-200 rounded-2xl shadow-2xl p-4 animate-bounce-in">
+      <div class="flex items-start space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-xl shrink-0">🔗</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-extrabold text-slate-900 text-sm mb-1">URL Toko Anda Siap! 🎉</div>
+          <div class="text-xs text-slate-500 mb-2">Bagikan tautan ini ke pelanggan agar mereka bisa melihat profil toko Anda:</div>
+          <div class="flex items-center space-x-2 bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+            <code class="text-xs text-emerald-700 font-bold flex-1 break-all">${storeUrl}</code>
+            <button onclick="copyStoreURL('${storeUrl}')" class="shrink-0 w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition-colors" title="Salin URL">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            </button>
+          </div>
+        </div>
+        <button onclick="document.getElementById('store-url-notif').remove()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 shrink-0">✕</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(notif);
+  
+  // Auto-dismiss setelah 30 detik
+  setTimeout(() => {
+    const el = document.getElementById('store-url-notif');
+    if (el) el.remove();
+  }, 30000);
+}
+
+function copyStoreURL(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    alert('✅ URL toko berhasil disalin!\n\n' + url);
+  }).catch(() => {
+    prompt('Salin URL toko Anda:', url);
+  });
 }
 
 // ==================== SUPER ADMIN & PENGELOLAAN MEMBER ====================
@@ -2079,6 +2602,7 @@ const SEED_MEMBERS = [
     email: 'andizulkifli28@gmail.com',
     password: 'admin123',
     role: 'super_admin',
+    slug: 'superadmin',
     logo: '👑',
     productsCount: 12,
     viewCount: 99,
@@ -2096,11 +2620,12 @@ const SEED_MEMBERS = [
     email: 'atikah.nurfadhilah@gmail.com',
     password: 'member123',
     role: 'member',
+    slug: 'anwbeautycare',
     logo: '🍗',
     productsCount: 3,
     viewCount: 3,
     orderCount: 0,
-    expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // 4 Nov 2026
+    expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'active',
     createdAt: '2026-10-01T00:00:00.000Z'
   },
@@ -2113,11 +2638,12 @@ const SEED_MEMBERS = [
     email: 'khulafaurrasyidin04@gmail.com',
     password: 'member123',
     role: 'member',
+    slug: 'haurajewelry',
     logo: '🏛️',
     productsCount: 4,
     viewCount: 2,
     orderCount: 0,
-    expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // 4 Nov 2026
+    expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'active',
     createdAt: '2026-10-05T00:00:00.000Z'
   },
@@ -2130,6 +2656,7 @@ const SEED_MEMBERS = [
     email: 'pemilik@toko.com',
     password: 'member123',
     role: 'member',
+    slug: 'tokoberkahbarokah',
     logo: '🏪',
     productsCount: 8,
     viewCount: 15,
@@ -2175,6 +2702,15 @@ function initRegisteredAccounts() {
   SEED_MEMBERS.forEach(seed => {
     if (!accounts.some(a => a.phone === seed.phone || a.email === seed.email)) {
       accounts.push(seed);
+    }
+  });
+
+  // Pastikan semua akun punya slug (untuk akun lama yang belum punya slug)
+  let slugsChanged = false;
+  accounts.forEach(acc => {
+    if (!acc.slug && acc.storeName) {
+      acc.slug = generateSlug(acc.storeName);
+      slugsChanged = true;
     }
   });
 
@@ -2278,7 +2814,12 @@ function handleLogout() {
     localStorage.removeItem('temanusaha_remembered_user');
     state.storeProfile = { ...DEFAULT_STORE_PROFILE };
     renderAll();
-    alert('Anda telah keluar dari akun. Ingatan sesi masuk telah dibersihkan.');
+    closeSideMenu();
+    
+    // Kembali ke landing page setelah logout
+    showPublicLandingPage();
+    
+    alert('Anda telah keluar dari akun. Sampai jumpa! 👋');
   }
 }
 
