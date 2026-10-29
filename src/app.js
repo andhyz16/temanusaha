@@ -358,7 +358,29 @@ Posting foto barang dagangan atau promo toko di WhatsApp status pada 2 jam emas:
 Gunakan kalimat ramah dari menu **"Ide Promosi & Status WA"** di aplikasi ini!`;
   }
 
-  // 9. JAWABAN UMUM / RINGKASAN CERDAS BERBASIS ANGKA RIIL
+  // 9. PERTANYAAN TENTANG APA YANG PERLU DIPERBAIKI / EVALUASI / SARAN
+  if (q.includes('perbaiki') || q.includes('evaluasi') || q.includes('masalah') || q.includes('kekurangan') || q.includes('kelemahan') || q.includes('saran') || q.includes('rekomendasi') || q.includes('perlu') || q.includes('harus') || q.includes('gimana') || q.includes('bagaimana') || q.includes('sebaiknya')) {
+    const lowMargin = metrics.totalSales > 0 && (metrics.grossProfit / metrics.totalSales) < 0.15;
+    const lowCash = metrics.cashInHand < 200000;
+    const highDebt = (state.receivables || []).filter(r => r.status !== 'paid').reduce((s, r) => s + (r.amount - (r.paidAmount || 0)), 0);
+    const slowProducts = state.products.filter(p => p.stock > 0 && (p.salesHistory || []).reduce((s, h) => s + h.qty, 0) === 0);
+    const criticalProducts = state.products.filter(p => p.stock <= (p.minStock || 5));
+
+    const issues = [];
+    if (lowMargin) issues.push(`📉 **Margin Terlalu Tipis:** Laba kotor toko baru ${Math.round((metrics.grossProfit / Math.max(metrics.totalSales,1)) * 100)}% dari omzet. Naikan harga jual 5–10% pada produk yang masih bisa bersaing.`);
+    if (lowCash) issues.push(`💸 **Kas Fisik Menipis:** Uang di laci hanya ${formatRupiah(metrics.cashInHand)}. Hindari pengeluaran non-produktif dan kejar piutang yang belum terbayar.`);
+    if (highDebt > 0) issues.push(`🔴 **Piutang Belum Tertagih: ${formatRupiah(highDebt)}** masih di tangan pelanggan. Kirim pengingat sopan via WA hari ini sebelum tagihan semakin terlambat.`);
+    if (slowProducts.length > 0) issues.push(`📦 **${slowProducts.length} Produk Lambat Laku:** ${slowProducts.slice(0,2).map(p=>p.name).join(', ')}. Buatkan bundling promo atau turunkan harga untuk cairkan modal mati.`);
+    if (criticalProducts.length > 0) issues.push(`⚠️ **${criticalProducts.length} Produk Stok Kritis:** ${criticalProducts.slice(0,2).map(p=>p.name).join(', ')}. Segera belanja sebelum kehabisan dan kehilangan pembeli.`);
+
+    if (issues.length === 0) {
+      return `✅ **Kondisi ${storeName} Terlihat Sehat Hari Ini!**\n\n• Omzet: ${formatRupiah(metrics.totalSales)}\n• Laba Bersih: ${formatRupiah(metrics.netProfit)}\n• Kas di Laci: ${formatRupiah(metrics.cashInHand)}\n\n💡 Tidak ada masalah kritis yang terdeteksi saat ini. Untuk berkembang lebih jauh, fokus pada:\n1. Naikkan omzet dengan rutin posting status WA setiap hari.\n2. Catat semua transaksi agar data makin akurat.\n3. Pastikan stok barang terlaris tidak sampai kosong.`;
+    }
+
+    return `🔍 **Evaluasi Kondisi ${storeName} — ${issues.length} Hal Perlu Diperhatikan:**\n\n${issues.join('\n\n')}\n\n🎯 **Saran Prioritas TemanUsaha:**\nFokus selesaikan poin nomor 1 terlebih dahulu, karena itulah yang paling berdampak pada kesehatan keuangan toko Anda saat ini. Tanyakan lebih lanjut jika Anda butuh panduan spesifik untuk setiap poin.`;
+  }
+
+  // 10. JAWABAN UMUM / RINGKASAN CERDAS BERBASIS ANGKA RIIL
   return `📊 **Laporan Cerdas Kondisi Usaha ${storeName} Hari Ini:**
 
 • **Total Penjualan (Omzet):** ${formatRupiah(metrics.totalSales)}
