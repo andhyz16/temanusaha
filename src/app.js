@@ -538,7 +538,7 @@ function initApp() {
   }
 
   // ==================== HANDLE URL SLUG ROUTING ====================
-  // Jika URL berisi ?toko=slug, coba muat toko yang sesuai
+  // Jika URL berisi ?toko=slug, buka aplikasi toko tersebut
   if (urlSlug) {
     let accounts = [];
     try {
@@ -549,28 +549,24 @@ function initApp() {
     const foundStore = accounts.find(a => a.slug === urlSlug || generateSlug(a.storeName) === urlSlug);
     
     if (foundStore) {
-      // Toko ditemukan — cek apakah pengguna saat ini adalah pemilik toko ini
-      if (state.currentUser && state.currentUser.storeId === foundStore.storeId) {
-        // Pemilik toko mengakses toko sendiri — tampilkan dashboard seperti biasa
-        state.storeProfile.name = foundStore.storeName;
-        state.storeProfile.type = foundStore.businessType || state.storeProfile.type;
-        document.title = `${foundStore.storeName} - TemanUsaha`;
-      } else if (!state.currentUser) {
-        // Pengunjung belum login — tampilkan landing page publik toko ini (hanya info)
-        // Simpan slug yang dikunjungi untuk referensi
-        state.visitingSlug = urlSlug;
-        state.visitingStore = foundStore;
-        
-        // Tampilkan landing page toko (bukan auth modal — akan ditangani oleh showStoreLandingPage)
-        setTimeout(() => showStoreLandingPage(foundStore), 100);
-      } else {
-        // Pengguna login sebagai toko lain sedang mengakses toko ini — tampilkan info toko
-        state.visitingSlug = urlSlug;
-        state.visitingStore = foundStore;
-        setTimeout(() => showStoreLandingPage(foundStore), 100);
-      }
+      // Toko ditemukan: LANGSUNG BUKA DASHBOARD APLIKASI KASIR TOKO TERSEBUT
+      state.currentUser = foundStore;
+      state.storeProfile = {
+        name: foundStore.storeName,
+        type: foundStore.businessType || 'Usaha UMKM',
+        phone: foundStore.phone || '',
+        email: foundStore.email || '',
+        logo: foundStore.logo || getBusinessEmoji(foundStore.businessType),
+        address: foundStore.address || 'Alamat Toko Belum Diatur'
+      };
+      
+      localStorage.setItem('temanusaha_active_user', JSON.stringify(foundStore));
+      document.title = `${foundStore.storeName} - TemanUsaha`;
+      
+      removeLandingPageAndRestoreApp();
+      renderAll();
     } else {
-      // Slug tidak ditemukan — tampilkan pesan 404 toko
+      // Slug tidak ditemukan di daftar toko
       setTimeout(() => showStoreNotFound(urlSlug), 100);
     }
   }
@@ -2038,6 +2034,13 @@ function renderStoreProfile() {
 
   const settingsEmail = document.getElementById('settings-account-email');
   if (settingsEmail) settingsEmail.value = profile.email || (state.currentUser ? state.currentUser.email : 'pemilik@toko.com');
+
+  // Kontrol Akses Super Admin: HANYA tampil jika login resmi sebagai Super Admin Andi Zulkifli
+  const isAdmin = isSuperAdmin(state.currentUser);
+  const headerAdminBtn = document.getElementById('header-admin-btn');
+  if (headerAdminBtn) headerAdminBtn.style.display = isAdmin ? 'flex' : 'none';
+  const drawerAdminBtn = document.getElementById('drawer-admin-btn');
+  if (drawerAdminBtn) drawerAdminBtn.style.display = isAdmin ? 'flex' : 'none';
 }
 
 function selectStoreLogo(emoji) {
@@ -2403,13 +2406,21 @@ function handleRegisterSubmit(event) {
   };
 
   saveState();
-  closeAuthModal();
+  
+  // Update URL browser secara otomatis ke link toko baru (?toko=slug)
+  try {
+    const newUrl = window.location.origin + window.location.pathname + '?toko=' + slug;
+    window.history.pushState({ toko: slug }, '', newUrl);
+  } catch(e) {}
+
+  // Buka aplikasi kasir toko langsung
+  removeLandingPageAndRestoreApp();
   renderAll();
 
-  // Tampilkan URL toko setelah registrasi berhasil
-  setTimeout(() => showStoreURLNotification(slug), 800);
+  // Tampilkan notifikasi link toko agar mudah disalin
+  setTimeout(() => showStoreURLNotification(slug), 500);
 
-  alert(`🎉 Selamat! Toko "${storeName}" berhasil didaftarkan.\n\nAnda mendapatkan GRATIS 1 BULAN (30 Hari) masa sewa aplikasi TemanUsaha dengan akses semua fitur kasir dan asisten cerdas.`);
+  alert(`🎉 Selamat! Toko "${storeName}" berhasil didaftarkan.\n\nLink Toko Anda:\nhttps://andhyz16.github.io/temanusaha/?toko=${slug}\n\nAnda mendapatkan GRATIS 1 BULAN (30 Hari) masa sewa aplikasi TemanUsaha dengan akses semua fitur kasir dan asisten cerdas.`);
 }
 
 // ==================== SLUG & URL ROUTING ====================
@@ -2442,7 +2453,7 @@ function getTokoSlugFromURL() {
  */
 function showStoreURLNotification(slug) {
   const baseUrl = 'https://andhyz16.github.io/temanusaha';
-  const storeUrl = `${baseUrl}/${slug}`;
+  const storeUrl = `${baseUrl}/?toko=${slug}`;
   
   const notif = document.createElement('div');
   notif.id = 'store-url-notif';
@@ -2655,13 +2666,18 @@ function handleLogout() {
     localStorage.removeItem('temanusaha_active_user');
     localStorage.removeItem('temanusaha_remembered_user');
     state.storeProfile = { ...DEFAULT_STORE_PROFILE };
-    renderAll();
     closeSideMenu();
     
-    // Kembali ke landing page setelah logout
+    // Reset URL browser ke halaman utama tanpa parameter ?toko=
+    try {
+      const baseUrl = window.location.origin + window.location.pathname;
+      window.history.pushState({}, '', baseUrl);
+    } catch(e) {}
+
+    // Kembali ke tampilan awal pendaftaran & login
     showPublicLandingPage();
     
-    alert('Anda telah keluar dari akun. Sampai jumpa! 👋');
+    alert('Anda telah keluar dari akun toko. Sampai jumpa! 👋');
   }
 }
 
