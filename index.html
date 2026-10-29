@@ -46,15 +46,62 @@
       scrollbar-width: none;
     }
   </style>
+
+  <!-- Inline Core Navigation Helpers (Langsung Aktif Tanpa Tergantung Cache) -->
+  <script>
+    function toggleSideMenu() {
+      const drawer = document.getElementById('sidebar-drawer');
+      if (!drawer) return;
+      const isOpen = drawer.style.transform === 'translateX(0%)' || drawer.style.transform === 'translateX(0px)';
+      if (isOpen) {
+        closeSideMenu();
+      } else {
+        openSideMenu();
+      }
+    }
+
+    function openSideMenu() {
+      const drawer = document.getElementById('sidebar-drawer');
+      const overlay = document.getElementById('sidebar-overlay');
+      if (!drawer || !overlay) return;
+      overlay.style.display = 'block';
+      overlay.style.pointerEvents = 'auto';
+      setTimeout(() => {
+        overlay.style.opacity = '1';
+        drawer.style.transform = 'translateX(0%)';
+      }, 10);
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSideMenu() {
+      const drawer = document.getElementById('sidebar-drawer');
+      const overlay = document.getElementById('sidebar-overlay');
+      if (!drawer || !overlay) return;
+      drawer.style.transform = 'translateX(-100%)';
+      overlay.style.opacity = '0';
+      overlay.style.pointerEvents = 'none';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 300);
+      document.body.style.overflow = '';
+    }
+
+    function selectMenu(tabId) {
+      closeSideMenu();
+      if (typeof switchTab === 'function') {
+        switchTab(tabId);
+      }
+    }
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
 
   <!-- ==================== SIDEBAR DRAWER (MENU GARIS TIGA) ==================== -->
   <!-- Backdrop Overlay -->
-  <div id="sidebar-overlay" onclick="closeSideMenu()" class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  <div id="sidebar-overlay" onclick="closeSideMenu()" style="display: none; opacity: 0; transition: opacity 0.3s ease;" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm pointer-events-none"></div>
 
   <!-- Sliding Drawer Panel -->
-  <aside id="sidebar-drawer" class="fixed top-0 left-0 bottom-0 z-50 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col justify-between transform -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-200">
+  <aside id="sidebar-drawer" style="transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);" class="fixed top-0 left-0 bottom-0 z-50 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col justify-between border-r border-slate-200">
     
     <!-- Drawer Header -->
     <div class="p-5 border-b border-slate-100 bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 text-white">
@@ -213,19 +260,23 @@
     <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-2 sm:space-x-3">
         <!-- Hamburger Menu Button (Garis Tiga) -->
-        <button onclick="toggleSideMenu()" id="btn-hamburger" title="Buka Menu" class="p-2 -ml-1 text-slate-700 hover:text-emerald-700 hover:bg-slate-100 rounded-xl transition-colors focus:outline-none flex items-center justify-center">
+        <button onclick="toggleSideMenu()" id="btn-hamburger" title="Buka Menu" class="p-2 -ml-1 text-slate-800 hover:text-emerald-700 hover:bg-slate-100 rounded-xl transition-colors focus:outline-none flex items-center justify-center cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 font-extrabold text-lg sm:text-xl shrink-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 font-extrabold text-lg sm:text-xl shrink-0 cursor-pointer" onclick="toggleSideMenu()">
           TU
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">TemanUsaha</h1>
-            <span class="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full uppercase tracking-wider hidden xs:inline">Asisten UMKM</span>
+            <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight cursor-pointer" onclick="toggleSideMenu()">TemanUsaha</h1>
+            <!-- Current Active Page Pill (Bisa diklik juga untuk buka menu) -->
+            <button onclick="toggleSideMenu()" id="header-active-page-pill" class="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200 transition-colors">
+              <span id="header-active-page-title">📊 Kondisi Usaha</span>
+              <span class="text-[9px] text-emerald-600">▾</span>
+            </button>
           </div>
           <p id="store-title" class="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[170px] sm:max-w-none">Toko Berkah Barokah • Sembako & Harian</p>
         </div>
@@ -251,40 +302,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Navigation Tabs (Mobile Scrollable) -->
-    <nav class="max-w-6xl mx-auto px-2 flex space-x-1 overflow-x-auto hide-scrollbar text-xs font-medium border-t border-slate-100 bg-slate-50/70">
-      <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-emerald-600 text-emerald-700 font-bold flex items-center space-x-1.5 whitespace-nowrap">
-        <span>📊</span>
-        <span>Kondisi Usaha</span>
-      </button>
-      <button onclick="switchTab('cashier')" id="tab-btn-cashier" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
-        <span>⚡</span>
-        <span>Catat Cepat</span>
-      </button>
-      <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
-        <span>📦</span>
-        <span>Stok & Kulakan</span>
-        <span id="badge-critical-stock" class="hidden text-[10px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-bold">0</span>
-      </button>
-      <button onclick="switchTab('debts')" id="tab-btn-debts" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
-        <span>📒</span>
-        <span>Buku Piutang</span>
-        <span id="badge-urgent-debt" class="hidden text-[10px] bg-red-500 text-white px-1.5 py-0.2 rounded-full font-bold">0</span>
-      </button>
-      <button onclick="switchTab('pricing')" id="tab-btn-pricing" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
-        <span>🏷️</span>
-        <span>Kalkulator Harga</span>
-      </button>
-      <button onclick="switchTab('assistant')" id="tab-btn-assistant" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
-        <span>💬</span>
-        <span>Tanya TemanUsaha</span>
-      </button>
-      <button onclick="switchTab('marketing')" id="tab-btn-marketing" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
-        <span>📢</span>
-        <span>Ide Promosi</span>
-      </button>
-    </nav>
   </header>
 
   <!-- Main Content Container -->
