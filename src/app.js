@@ -402,9 +402,15 @@ function showStoreNotFound(slug) {
 function getBusinessEmoji(businessType) {
   const emojiMap = {
     'Sembako & Kebutuhan Harian': '🛒',
-    'Warung Makan & Minuman': '🍜',
+    'Toko Pakaian & Fashion': '👗',
     'Pakaian & Fashion': '👗',
+    'Warung Makan & Kuliner': '🍜',
+    'Warung Makan & Minuman': '🍜',
+    'Konter Pulsa & Aksesoris HP': '📱',
     'Elektronik & Gadget': '📱',
+    'Toko Bangunan & Perkakas': '🏗️',
+    'Bengkel & Sparepart': '🔧',
+    'Reseller & Toko Online': '🛍️',
     'Kosmetik & Kecantikan': '💄',
     'Perabot Rumah Tangga': '🏠',
     'Toko Kelontong': '🏪',
@@ -412,6 +418,526 @@ function getBusinessEmoji(businessType) {
     'Toko Online': '🛍️',
   };
   return emojiMap[businessType] || '🏪';
+}
+
+/**
+ * Menghasilkan data demo inventaris, transaksi, dan pelanggan yang relevan
+ * sesuai dengan jenis usaha yang dipilih oleh pengguna saat pendaftaran.
+ */
+function getDemoDataForBusinessType(businessType, storeName) {
+  const type = businessType || 'Sembako & Kebutuhan Harian';
+
+  if (type === 'Toko Pakaian & Fashion' || type === 'Pakaian & Fashion') {
+    return {
+      logo: '👗',
+      initialCash: 1500000,
+      products: [
+        { id: 'prod-f-1', name: 'Daster Rayon Motif Premium', category: 'Fashion Wanita', costPrice: 38000, sellPrice: 55000, stock: 8, minStock: 15, dailySalesAvg: 4.0, unit: 'pcs' },
+        { id: 'prod-f-2', name: 'Gamis Crinkle Airflow Polos', category: 'Fashion Wanita', costPrice: 75000, sellPrice: 110000, stock: 4, minStock: 10, dailySalesAvg: 2.5, unit: 'pcs' },
+        { id: 'prod-f-3', name: 'Hijab Segiempat Voal Premium', category: 'Hijab & Jilbab', costPrice: 16000, sellPrice: 28000, stock: 28, minStock: 12, dailySalesAvg: 5.5, unit: 'pcs' },
+        { id: 'prod-f-4', name: 'Celana Kulot Highwaist Linen', category: 'Bawahan', costPrice: 48000, sellPrice: 75000, stock: 6, minStock: 12, dailySalesAvg: 3.0, unit: 'pcs' },
+        { id: 'prod-f-5', name: 'Kemeja Flanel Oversize Pria/Wanita', category: 'Atasan', costPrice: 62000, sellPrice: 95000, stock: 5, minStock: 8, dailySalesAvg: 2.0, unit: 'pcs' },
+        { id: 'prod-f-6', name: 'Kaos Polos Cotton Combed 30s', category: 'Atasan', costPrice: 28000, sellPrice: 45000, stock: 32, minStock: 15, dailySalesAvg: 6.0, unit: 'pcs' },
+        { id: 'prod-f-7', name: 'Rok Plisket Mayung Premium', category: 'Bawahan', costPrice: 40000, sellPrice: 65000, stock: 10, minStock: 8, dailySalesAvg: 2.5, unit: 'pcs' },
+        { id: 'prod-f-8', name: 'Mukena Dewasa Katun Rayon Adem', category: 'Perlengkapan Ibadah', costPrice: 72000, sellPrice: 115000, stock: 3, minStock: 6, dailySalesAvg: 1.5, unit: 'set' }
+      ],
+      customers: [
+        { id: 'cust-f-1', name: 'Bu Linda (Reseller Gamis)', phone: '081234567891', debtAmount: 385000, dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], notes: 'Gamis Crinkle 2 + Daster 3' },
+        { id: 'cust-f-2', name: 'Mbak Ayu (Pelanggan Tetap)', phone: '081987654321', debtAmount: 140000, dueDate: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0], notes: 'Kulot Linen 1 + Hijab Voal 2' },
+        { id: 'cust-f-3', name: 'Bu RT Wardah', phone: '085711223344', debtAmount: 75000, dueDate: new Date().toISOString().split('T')[0], notes: 'Daster Rayon 1 pcs' }
+      ],
+      transactions: [
+        {
+          id: 'trx-f-1',
+          time: '09:20',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [{ productId: 'prod-f-1', name: 'Daster Rayon Motif Premium', qty: 2, price: 55000, cost: 38000 }],
+          totalAmount: 110000,
+          totalCost: 76000,
+          grossProfit: 34000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-f-2',
+          time: '11:15',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-f-4', name: 'Celana Kulot Highwaist Linen', qty: 1, price: 75000, cost: 48000 },
+            { productId: 'prod-f-3', name: 'Hijab Segiempat Voal Premium', qty: 2, price: 28000, cost: 16000 }
+          ],
+          totalAmount: 131000,
+          totalCost: 80000,
+          grossProfit: 51000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-f-3',
+          time: '12:30',
+          type: 'expense_ops',
+          description: 'Plastik polymailer kemasan + hanger baju toko',
+          category: 'Plastik & Kemasan',
+          totalAmount: 35000
+        },
+        {
+          id: 'trx-f-4',
+          time: '14:00',
+          type: 'sale',
+          customer: 'Bu Linda (Reseller Gamis)',
+          items: [
+            { productId: 'prod-f-2', name: 'Gamis Crinkle Airflow Polos', qty: 2, price: 110000, cost: 75000 },
+            { productId: 'prod-f-1', name: 'Daster Rayon Motif Premium', qty: 3, price: 55000, cost: 38000 }
+          ],
+          totalAmount: 385000,
+          totalCost: 264000,
+          grossProfit: 121000,
+          paymentMethod: 'debt',
+          status: 'pending'
+        },
+        {
+          id: 'trx-f-5',
+          time: '15:10',
+          type: 'personal_draw',
+          description: 'Uang belanja dapur & saku anak',
+          category: 'Uang Pribadi',
+          totalAmount: 120000
+        }
+      ]
+    };
+  }
+
+  if (type === 'Warung Makan & Kuliner' || type === 'Warung Makan & Minuman') {
+    return {
+      logo: '🍜',
+      initialCash: 850000,
+      products: [
+        { id: 'prod-k-1', name: 'Paket Nasi Ayam Geprek Sambal Bawang', category: 'Makanan Berat', costPrice: 11000, sellPrice: 17000, stock: 25, minStock: 10, dailySalesAvg: 18.0, unit: 'porsi' },
+        { id: 'prod-k-2', name: 'Nasi Goreng Spesial Telur Ceplok', category: 'Makanan Berat', costPrice: 9000, sellPrice: 15000, stock: 30, minStock: 10, dailySalesAvg: 15.0, unit: 'porsi' },
+        { id: 'prod-k-3', name: 'Mie Ayam Bakso Urat Jumbo', category: 'Mie & Bakso', costPrice: 12000, sellPrice: 18000, stock: 18, minStock: 10, dailySalesAvg: 12.0, unit: 'mangkuk' },
+        { id: 'prod-k-4', name: 'Es Teh Manis Jumbo Segar', category: 'Minuman Segar', costPrice: 1800, sellPrice: 5000, stock: 85, minStock: 20, dailySalesAvg: 30.0, unit: 'gelas' },
+        { id: 'prod-k-5', name: 'Kopi Susu Gula Aren Cup', category: 'Minuman Segar', costPrice: 5500, sellPrice: 12000, stock: 35, minStock: 15, dailySalesAvg: 10.0, unit: 'cup' },
+        { id: 'prod-k-6', name: 'Tempe Mendoan Hangat (Isi 4)', category: 'Camilan & Gorengan', costPrice: 4000, sellPrice: 8000, stock: 20, minStock: 10, dailySalesAvg: 12.0, unit: 'porsi' },
+        { id: 'prod-k-7', name: 'Jus Alpukat Kocok Kental', category: 'Minuman Segar', costPrice: 6500, sellPrice: 14000, stock: 14, minStock: 8, dailySalesAvg: 7.0, unit: 'cup' },
+        { id: 'prod-k-8', name: 'Kerupuk Kaleng Putih', category: 'Pelengkap', costPrice: 800, sellPrice: 2000, stock: 50, minStock: 15, dailySalesAvg: 20.0, unit: 'buah' }
+      ],
+      customers: [
+        { id: 'cust-k-1', name: 'Pak Joko (Bengkel Sebelah)', phone: '081234567891', debtAmount: 145000, dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], notes: 'Makan siang mingguan bengkel' },
+        { id: 'cust-k-2', name: 'Bu Siti (Kantor Kelurahan)', phone: '081987654321', debtAmount: 280000, dueDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], notes: 'Paket makan siang rapat kelurahan' },
+        { id: 'cust-k-3', name: 'Mas Rian (Driver Ojol)', phone: '085711223344', debtAmount: 50000, dueDate: new Date().toISOString().split('T')[0], notes: 'Ayam Geprek + Es Teh' }
+      ],
+      transactions: [
+        {
+          id: 'trx-k-1',
+          time: '11:45',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-k-1', name: 'Paket Nasi Ayam Geprek Sambal Bawang', qty: 2, price: 17000, cost: 11000 },
+            { productId: 'prod-k-4', name: 'Es Teh Manis Jumbo Segar', qty: 2, price: 5000, cost: 1800 }
+          ],
+          totalAmount: 44000,
+          totalCost: 25600,
+          grossProfit: 18400,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-k-2',
+          time: '12:30',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-k-2', name: 'Nasi Goreng Spesial Telur Ceplok', qty: 3, price: 15000, cost: 9000 },
+            { productId: 'prod-k-6', name: 'Tempe Mendoan Hangat (Isi 4)', qty: 2, price: 8000, cost: 4000 },
+            { productId: 'prod-k-4', name: 'Es Teh Manis Jumbo Segar', qty: 3, price: 5000, cost: 1800 }
+          ],
+          totalAmount: 76000,
+          totalCost: 40400,
+          grossProfit: 35600,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-k-3',
+          time: '13:00',
+          type: 'expense_ops',
+          description: 'Gas Elpiji 3kg + Minyak Goreng Curah 2kg',
+          category: 'Bahan Baku & Dapur',
+          totalAmount: 48000
+        },
+        {
+          id: 'trx-k-4',
+          time: '13:30',
+          type: 'sale',
+          customer: 'Bu Siti (Kantor Kelurahan)',
+          items: [
+            { productId: 'prod-k-1', name: 'Paket Nasi Ayam Geprek Sambal Bawang', qty: 15, price: 17000, cost: 11000 },
+            { productId: 'prod-k-4', name: 'Es Teh Manis Jumbo Segar', qty: 15, price: 5000, cost: 1800 }
+          ],
+          totalAmount: 330000,
+          totalCost: 192000,
+          grossProfit: 138000,
+          paymentMethod: 'debt',
+          status: 'pending'
+        },
+        {
+          id: 'trx-k-5',
+          time: '14:45',
+          type: 'personal_draw',
+          description: 'Uang belanja sayur pasar rumah',
+          category: 'Uang Pribadi',
+          totalAmount: 75000
+        }
+      ]
+    };
+  }
+
+  if (type === 'Konter Pulsa & Aksesoris HP' || type === 'Elektronik & Gadget') {
+    return {
+      logo: '📱',
+      initialCash: 1200000,
+      products: [
+        { id: 'prod-hp-1', name: 'Kabel Data Fast Charging Type-C 3A', category: 'Kabel & Charger', costPrice: 12000, sellPrice: 25000, stock: 15, minStock: 8, dailySalesAvg: 3.5, unit: 'pcs' },
+        { id: 'prod-hp-2', name: 'TWS Bluetooth Earbuds Wireless Stereo', category: 'Audio & Headset', costPrice: 55000, sellPrice: 95000, stock: 5, minStock: 6, dailySalesAvg: 1.5, unit: 'unit' },
+        { id: 'prod-hp-3', name: 'Tempered Glass Full Lem Layar HP', category: 'Pelindung Layar', costPrice: 6000, sellPrice: 20000, stock: 35, minStock: 15, dailySalesAvg: 5.0, unit: 'pcs' },
+        { id: 'prod-hp-4', name: 'Kepala Charger Quick Charge 20W', category: 'Kabel & Charger', costPrice: 25000, sellPrice: 48000, stock: 8, minStock: 6, dailySalesAvg: 2.0, unit: 'pcs' },
+        { id: 'prod-hp-5', name: 'Powerbank 10.000 mAh Slim Fast Charge', category: 'Powerbank', costPrice: 78000, sellPrice: 135000, stock: 4, minStock: 5, dailySalesAvg: 1.0, unit: 'unit' },
+        { id: 'prod-hp-6', name: 'Handsfree Bass Jack 3.5mm Earphone', category: 'Audio & Headset', costPrice: 8000, sellPrice: 20000, stock: 22, minStock: 10, dailySalesAvg: 3.0, unit: 'pcs' },
+        { id: 'prod-hp-7', name: 'Holder HP Motor Waterproof Stang', category: 'Aksesoris Motor', costPrice: 22000, sellPrice: 45000, stock: 7, minStock: 6, dailySalesAvg: 1.8, unit: 'pcs' },
+        { id: 'prod-hp-8', name: 'Ring Light Mini HP Selfie Clip', category: 'Aksesoris Foto', costPrice: 14000, sellPrice: 30000, stock: 12, minStock: 6, dailySalesAvg: 1.5, unit: 'pcs' }
+      ],
+      customers: [
+        { id: 'cust-hp-1', name: 'Mas Doni (Driver Kurir)', phone: '081234567891', debtAmount: 180000, dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], notes: 'Powerbank + Holder Motor' },
+        { id: 'cust-hp-2', name: 'Pak RT Budi', phone: '081987654321', debtAmount: 95000, dueDate: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0], notes: 'TWS Earbuds Bluetooth' },
+        { id: 'cust-hp-3', name: 'Mbak Dita', phone: '085711223344', debtAmount: 45000, dueDate: new Date().toISOString().split('T')[0], notes: 'Kabel Type C + Pasang Tempered' }
+      ],
+      transactions: [
+        {
+          id: 'trx-hp-1',
+          time: '10:15',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-hp-3', name: 'Tempered Glass Full Lem Layar HP', qty: 1, price: 20000, cost: 6000 },
+            { productId: 'prod-hp-1', name: 'Kabel Data Fast Charging Type-C 3A', qty: 1, price: 25000, cost: 12000 }
+          ],
+          totalAmount: 45000,
+          totalCost: 18000,
+          grossProfit: 27000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-hp-2',
+          time: '12:00',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [{ productId: 'prod-hp-2', name: 'TWS Bluetooth Earbuds Wireless Stereo', qty: 1, price: 95000, cost: 55000 }],
+          totalAmount: 95000,
+          totalCost: 55000,
+          grossProfit: 40000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-hp-3',
+          time: '13:15',
+          type: 'expense_ops',
+          description: 'Lakban bening 2 roll + Bubble wrap packing',
+          category: 'Packing & Kemasan',
+          totalAmount: 28000
+        },
+        {
+          id: 'trx-hp-4',
+          time: '14:20',
+          type: 'sale',
+          customer: 'Mas Doni (Driver Kurir)',
+          items: [
+            { productId: 'prod-hp-5', name: 'Powerbank 10.000 mAh Slim Fast Charge', qty: 1, price: 135000, cost: 78000 },
+            { productId: 'prod-hp-7', name: 'Holder HP Motor Waterproof Stang', qty: 1, price: 45000, cost: 22000 }
+          ],
+          totalAmount: 180000,
+          totalCost: 100000,
+          grossProfit: 80000,
+          paymentMethod: 'debt',
+          status: 'pending'
+        },
+        {
+          id: 'trx-hp-5',
+          time: '15:30',
+          type: 'personal_draw',
+          description: 'Beli makan siang & token listrik rumah',
+          category: 'Uang Pribadi',
+          totalAmount: 100000
+        }
+      ]
+    };
+  }
+
+  if (type === 'Toko Bangunan & Perkakas') {
+    return {
+      logo: '🏗️',
+      initialCash: 2500000,
+      products: [
+        { id: 'prod-b-1', name: 'Semen Tiga Roda 50kg', category: 'Semen & Pasir', costPrice: 61000, sellPrice: 68000, stock: 40, minStock: 20, dailySalesAvg: 8.0, unit: 'sak' },
+        { id: 'prod-b-2', name: 'Cat Tembok Vinilex 5kg Putih', category: 'Cat & Kimia', costPrice: 125000, sellPrice: 145000, stock: 12, minStock: 8, dailySalesAvg: 2.0, unit: 'galon' },
+        { id: 'prod-b-3', name: 'Pipa PVC 3/4 inch Maspion AW', category: 'Plumbing & Pipa', costPrice: 26000, sellPrice: 34000, stock: 25, minStock: 15, dailySalesAvg: 4.0, unit: 'batang' },
+        { id: 'prod-b-4', name: 'Paku Kayu Campur 5cm - 7cm', category: 'Baut & Paku', costPrice: 16000, sellPrice: 22000, stock: 45, minStock: 15, dailySalesAvg: 5.0, unit: 'kg' },
+        { id: 'prod-b-5', name: 'Kuas Cat 3 inch Eterna Gagang Kayu', category: 'Alat Tukang', costPrice: 8500, sellPrice: 14000, stock: 30, minStock: 10, dailySalesAvg: 3.5, unit: 'pcs' },
+        { id: 'prod-b-6', name: 'Thinner Super Bintang 1 Liter', category: 'Cat & Kimia', costPrice: 22000, sellPrice: 30000, stock: 18, minStock: 10, dailySalesAvg: 2.5, unit: 'kaleng' },
+        { id: 'prod-b-7', name: 'Kunci Pas Ring Set 8-24mm', category: 'Alat Tukang', costPrice: 85000, sellPrice: 130000, stock: 6, minStock: 4, dailySalesAvg: 1.0, unit: 'set' },
+        { id: 'prod-b-8', name: 'Saklar Lampu Broco Engkel Single', category: 'Kelistrikan', costPrice: 14000, sellPrice: 21000, stock: 35, minStock: 12, dailySalesAvg: 3.0, unit: 'pcs' }
+      ],
+      customers: [
+        { id: 'cust-b-1', name: 'Pak Mandor Sugeng', phone: '081234567891', debtAmount: 850000, dueDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], notes: 'Semen 10 sak + Pipa PVC 5 btg' },
+        { id: 'cust-b-2', name: 'Tukang Cat Mas Wahyu', phone: '081987654321', debtAmount: 320000, dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], notes: 'Cat Vinilex 2 galon + Kuas' },
+        { id: 'cust-b-3', name: 'Pak Haji Usman', phone: '085711223344', debtAmount: 160000, dueDate: new Date().toISOString().split('T')[0], notes: 'Paku 5kg + Kunci set' }
+      ],
+      transactions: [
+        {
+          id: 'trx-b-1',
+          time: '08:30',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-b-1', name: 'Semen Tiga Roda 50kg', qty: 3, price: 68000, cost: 61000 },
+            { productId: 'prod-b-4', name: 'Paku Kayu Campur 5cm - 7cm', qty: 2, price: 22000, cost: 16000 }
+          ],
+          totalAmount: 248000,
+          totalCost: 215000,
+          grossProfit: 33000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-b-2',
+          time: '10:45',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-b-2', name: 'Cat Tembok Vinilex 5kg Putih', qty: 1, price: 145000, cost: 125000 },
+            { productId: 'prod-b-5', name: 'Kuas Cat 3 inch Eterna Gagang Kayu', qty: 2, price: 14000, cost: 8500 }
+          ],
+          totalAmount: 173000,
+          totalCost: 142000,
+          grossProfit: 31000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-b-3',
+          time: '12:00',
+          type: 'expense_ops',
+          description: 'Tali rafia gulung besar + kantong semen bekas',
+          category: 'Operasional Gudang',
+          totalAmount: 35000
+        },
+        {
+          id: 'trx-b-4',
+          time: '13:30',
+          type: 'sale',
+          customer: 'Pak Mandor Sugeng',
+          items: [
+            { productId: 'prod-b-1', name: 'Semen Tiga Roda 50kg', qty: 10, price: 68000, cost: 61000 },
+            { productId: 'prod-b-3', name: 'Pipa PVC 3/4 inch Maspion AW', qty: 5, price: 34000, cost: 26000 }
+          ],
+          totalAmount: 850000,
+          totalCost: 740000,
+          grossProfit: 110000,
+          paymentMethod: 'debt',
+          status: 'pending'
+        },
+        {
+          id: 'trx-b-5',
+          time: '15:00',
+          type: 'personal_draw',
+          description: 'Uang belanja dapur rumah',
+          category: 'Uang Pribadi',
+          totalAmount: 150000
+        }
+      ]
+    };
+  }
+
+  if (type === 'Bengkel & Sparepart') {
+    return {
+      logo: '🔧',
+      initialCash: 1600000,
+      products: [
+        { id: 'prod-bg-1', name: 'Oli Mesin MPX2 0.8L Matic Honda', category: 'Oli Mesin', costPrice: 46000, sellPrice: 58000, stock: 20, minStock: 10, dailySalesAvg: 4.0, unit: 'botol' },
+        { id: 'prod-bg-2', name: 'Oli Shell Advance AX7 10W-40 0.8L', category: 'Oli Mesin', costPrice: 54000, sellPrice: 68000, stock: 15, minStock: 8, dailySalesAvg: 3.0, unit: 'botol' },
+        { id: 'prod-bg-3', name: 'Busi Denso Standard U24EPR9', category: 'Busi & Kelistrikan', costPrice: 14000, sellPrice: 25000, stock: 25, minStock: 10, dailySalesAvg: 3.5, unit: 'pcs' },
+        { id: 'prod-bg-4', name: 'Kampas Rem Belakang Beat / Vario', category: 'Pengereman', costPrice: 28000, sellPrice: 45000, stock: 12, minStock: 6, dailySalesAvg: 2.0, unit: 'set' },
+        { id: 'prod-bg-5', name: 'Ban Tubeless Depan 80/90-14 IRC', category: 'Ban & Velg', costPrice: 165000, sellPrice: 210000, stock: 6, minStock: 4, dailySalesAvg: 1.0, unit: 'buah' },
+        { id: 'prod-bg-6', name: 'Cairan Ban Tubeless Anti Bocor 350ml', category: 'Ban & Velg', costPrice: 18000, sellPrice: 30000, stock: 16, minStock: 8, dailySalesAvg: 2.5, unit: 'botol' },
+        { id: 'prod-bg-7', name: 'Lampu LED Depan Motor H6 Putih', category: 'Busi & Kelistrikan', costPrice: 24000, sellPrice: 45000, stock: 14, minStock: 6, dailySalesAvg: 2.0, unit: 'pcs' },
+        { id: 'prod-bg-8', name: 'Rantai Roda Set Heavy Duty Supra X', category: 'Rantai & Gir', costPrice: 95000, sellPrice: 140000, stock: 5, minStock: 4, dailySalesAvg: 1.0, unit: 'set' }
+      ],
+      customers: [
+        { id: 'cust-bg-1', name: 'Mas Agus (Driver Ojol Grab)', phone: '081234567891', debtAmount: 268000, dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], notes: 'Ban Tubeless Depan + Oli MPX2' },
+        { id: 'cust-bg-2', name: 'Pak Wawan (Pelanggan Servis)', phone: '081987654321', debtAmount: 113000, dueDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], notes: 'Oli Shell + Kampas Rem' },
+        { id: 'cust-bg-3', name: 'Mas Fajar', phone: '085711223344', debtAmount: 70000, dueDate: new Date().toISOString().split('T')[0], notes: 'Lampu LED + Busi' }
+      ],
+      transactions: [
+        {
+          id: 'trx-bg-1',
+          time: '09:00',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-bg-1', name: 'Oli Mesin MPX2 0.8L Matic Honda', qty: 1, price: 58000, cost: 46000 },
+            { productId: 'prod-bg-3', name: 'Busi Denso Standard U24EPR9', qty: 1, price: 25000, cost: 14000 }
+          ],
+          totalAmount: 83000,
+          totalCost: 60000,
+          grossProfit: 23000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-bg-2',
+          time: '11:20',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-bg-4', name: 'Kampas Rem Belakang Beat / Vario', qty: 1, price: 45000, cost: 28000 },
+            { productId: 'prod-bg-6', name: 'Cairan Ban Tubeless Anti Bocor 350ml', qty: 1, price: 30000, cost: 18000 }
+          ],
+          totalAmount: 75000,
+          totalCost: 46000,
+          grossProfit: 29000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-bg-3',
+          time: '12:45',
+          type: 'expense_ops',
+          description: 'Kain majun pembersih + bensin cuci sparepart',
+          category: 'Operasional Bengkel',
+          totalAmount: 30000
+        },
+        {
+          id: 'trx-bg-4',
+          time: '14:15',
+          type: 'sale',
+          customer: 'Mas Agus (Driver Ojol Grab)',
+          items: [
+            { productId: 'prod-bg-5', name: 'Ban Tubeless Depan 80/90-14 IRC', qty: 1, price: 210000, cost: 165000 },
+            { productId: 'prod-bg-1', name: 'Oli Mesin MPX2 0.8L Matic Honda', qty: 1, price: 58000, cost: 46000 }
+          ],
+          totalAmount: 268000,
+          totalCost: 211000,
+          grossProfit: 57000,
+          paymentMethod: 'debt',
+          status: 'pending'
+        },
+        {
+          id: 'trx-bg-5',
+          time: '16:00',
+          type: 'personal_draw',
+          description: 'Uang belanja rumah tangga',
+          category: 'Uang Pribadi',
+          totalAmount: 120000
+        }
+      ]
+    };
+  }
+
+  if (type === 'Reseller & Toko Online' || type === 'Kosmetik & Kecantikan' || type === 'Lainnya') {
+    return {
+      logo: type === 'Kosmetik & Kecantikan' ? '💄' : '🛍️',
+      initialCash: 1200000,
+      products: [
+        { id: 'prod-ol-1', name: 'Paket Brightening Serum Glowing Day/Night', category: 'Skincare', costPrice: 42000, sellPrice: 75000, stock: 15, minStock: 8, dailySalesAvg: 3.0, unit: 'paket' },
+        { id: 'prod-ol-2', name: 'Tumbler Stainless Termos 500ml LED Suhu', category: 'Home & Living', costPrice: 32000, sellPrice: 55000, stock: 20, minStock: 10, dailySalesAvg: 3.5, unit: 'pcs' },
+        { id: 'prod-ol-3', name: 'Tas Selempang Kanvas Unisex Casual', category: 'Fashion & Tas', costPrice: 38000, sellPrice: 68000, stock: 12, minStock: 6, dailySalesAvg: 2.0, unit: 'pcs' },
+        { id: 'prod-ol-4', name: 'Dompet Lipat Kulit Sintetis Slim Pria/Wanita', category: 'Fashion & Tas', costPrice: 22000, sellPrice: 45000, stock: 18, minStock: 8, dailySalesAvg: 2.5, unit: 'pcs' },
+        { id: 'prod-ol-5', name: 'Botol Minum 2 Liter Gradasi Motivasi Viral', category: 'Home & Living', costPrice: 19000, sellPrice: 35000, stock: 25, minStock: 10, dailySalesAvg: 4.0, unit: 'pcs' },
+        { id: 'prod-ol-6', name: 'Payung Lipat Otomatis Anti Angin & UV', category: 'Home & Living', costPrice: 36000, sellPrice: 60000, stock: 10, minStock: 6, dailySalesAvg: 1.5, unit: 'pcs' },
+        { id: 'prod-ol-7', name: 'Kaos Kaki Semata Kaki Ankle (Isi 3 Pasang)', category: 'Fashion & Tas', costPrice: 12000, sellPrice: 25000, stock: 35, minStock: 12, dailySalesAvg: 4.5, unit: 'pack' },
+        { id: 'prod-ol-8', name: 'Hand Cream Moisturizer Wangi Buah 30g', category: 'Skincare', costPrice: 8500, sellPrice: 18000, stock: 40, minStock: 15, dailySalesAvg: 5.0, unit: 'tube' }
+      ],
+      customers: [
+        { id: 'cust-ol-1', name: 'Kak Nadia (Pelanggan Shopee/COD)', phone: '081234567891', debtAmount: 198000, dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], notes: 'Paket Serum + Tas Selempang (COD)' },
+        { id: 'cust-ol-2', name: 'Reseller Mbak Rini', phone: '081987654321', debtAmount: 165000, dueDate: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0], notes: 'Tumbler 3 pcs' },
+        { id: 'cust-ol-3', name: 'Bu Dosen Mira', phone: '085711223344', debtAmount: 70000, dueDate: new Date().toISOString().split('T')[0], notes: 'Botol 2L + Hand Cream' }
+      ],
+      transactions: [
+        {
+          id: 'trx-ol-1',
+          time: '10:00',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [{ productId: 'prod-ol-2', name: 'Tumbler Stainless Termos 500ml LED Suhu', qty: 2, price: 55000, cost: 32000 }],
+          totalAmount: 110000,
+          totalCost: 64000,
+          grossProfit: 46000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-ol-2',
+          time: '12:30',
+          type: 'sale',
+          customer: 'Pembeli Langsung',
+          items: [
+            { productId: 'prod-ol-1', name: 'Paket Brightening Serum Glowing Day/Night', qty: 1, price: 75000, cost: 42000 },
+            { productId: 'prod-ol-8', name: 'Hand Cream Moisturizer Wangi Buah 30g', qty: 2, price: 18000, cost: 8500 }
+          ],
+          totalAmount: 111000,
+          totalCost: 59000,
+          grossProfit: 52000,
+          paymentMethod: 'cash',
+          status: 'paid'
+        },
+        {
+          id: 'trx-ol-3',
+          time: '13:45',
+          type: 'expense_ops',
+          description: 'Polymailer bubble wrap + stiker fragile toko',
+          category: 'Packing & Ongkir',
+          totalAmount: 35000
+        },
+        {
+          id: 'trx-ol-4',
+          time: '15:15',
+          type: 'sale',
+          customer: 'Kak Nadia (Pelanggan Shopee/COD)',
+          items: [
+            { productId: 'prod-ol-1', name: 'Paket Brightening Serum Glowing Day/Night', qty: 1, price: 75000, cost: 42000 },
+            { productId: 'prod-ol-3', name: 'Tas Selempang Kanvas Unisex Casual', qty: 1, price: 68000, cost: 38000 },
+            { productId: 'prod-ol-6', name: 'Payung Lipat Otomatis Anti Angin & UV', qty: 1, price: 55000, cost: 36000 }
+          ],
+          totalAmount: 198000,
+          totalCost: 116000,
+          grossProfit: 82000,
+          paymentMethod: 'debt',
+          status: 'pending'
+        },
+        {
+          id: 'trx-ol-5',
+          time: '16:30',
+          type: 'personal_draw',
+          description: 'Uang belanja harian keluarga',
+          category: 'Uang Pribadi',
+          totalAmount: 100000
+        }
+      ]
+    };
+  }
+
+  // Standar: Sembako & Kebutuhan Harian
+  return {
+    logo: '🛒',
+    initialCash: 1250000,
+    products: DEFAULT_PRODUCTS,
+    customers: DEFAULT_CUSTOMERS,
+    transactions: DEFAULT_TRANSACTIONS
+  };
 }
 
 // ==================== PUBLIC LANDING / AUTH SCREEN ====================
@@ -671,16 +1197,16 @@ function saveState() {
   // Simpan ke LocalStorage seketika
   localStorage.setItem('temanusaha_db_v1', JSON.stringify(payload));
 
-  // Simpan ke Firebase Firestore secara asinkron
-  if (typeof isFirebaseReady !== 'undefined' && isFirebaseReady && db) {
+  // Simpan ke Firebase Firestore secara asinkron (hanya jika ada akun toko login)
+  if (typeof isFirebaseReady !== 'undefined' && isFirebaseReady && db && state.currentUser && state.currentUser.storeId && state.currentUser.role !== 'super_admin') {
     setCloudStatus('syncing', 'Menyimpan...');
-    const storeDocId = (state.currentUser && state.currentUser.storeId) ? state.currentUser.storeId : 'toko-berkah';
+    const storeDocId = state.currentUser.storeId;
     db.collection('stores').doc(storeDocId).set({
       ...payload,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true })
     .then(() => {
-      setCloudStatus('connected', 'Firebase Terhubung ✓');
+      setCloudStatus('connected', 'Cloud Siap ✓');
     })
     .catch((err) => {
       console.warn('Gagal sinkron Firestore:', err);
@@ -1986,12 +2512,26 @@ function switchTab(tabId) {
 }
 
 // ==================== IDENTITAS TOKO & PROFIL ====================
+
+/**
+ * Render logo toko: mendukung gambar Base64/URL dan karakter emoji.
+ */
+function renderLogoElement(element, logoValue, altName = 'Logo Toko') {
+  if (!element) return;
+  const logo = logoValue || '🏪';
+  if (typeof logo === 'string' && (logo.startsWith('data:image/') || logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('blob:'))) {
+    element.innerHTML = `<img src="${logo}" alt="${altName}" class="w-full h-full object-cover rounded-xl">`;
+  } else {
+    element.innerHTML = `<span class="flex items-center justify-center w-full h-full">${logo}</span>`;
+  }
+}
+
 function renderStoreProfile() {
   const profile = state.storeProfile || DEFAULT_STORE_PROFILE;
 
-  // Header
+  // Header Logo & Judul
   const headerLogo = document.getElementById('header-store-logo');
-  if (headerLogo) headerLogo.innerText = profile.logo || '🏪';
+  if (headerLogo) renderLogoElement(headerLogo, profile.logo, profile.name);
 
   const storeTitle = document.getElementById('store-title');
   if (storeTitle) storeTitle.innerText = `${profile.name} • ${profile.type}`;
@@ -2001,9 +2541,9 @@ function renderStoreProfile() {
     userBtnLabel.innerText = state.currentUser ? (profile.name.length > 12 ? profile.name.substring(0, 12) + '...' : profile.name) : 'Daftar / Masuk';
   }
 
-  // Drawer
+  // Drawer (Menu Samping)
   const drawerLogo = document.getElementById('drawer-store-logo');
-  if (drawerLogo) drawerLogo.innerText = profile.logo || '🏪';
+  if (drawerLogo) renderLogoElement(drawerLogo, profile.logo, profile.name);
 
   const drawerName = document.getElementById('drawer-store-name');
   if (drawerName) drawerName.innerText = profile.name;
@@ -2016,9 +2556,9 @@ function renderStoreProfile() {
     drawerPhone.innerText = state.currentUser ? (state.currentUser.phone || state.currentUser.email || 'Akun Aktif') : 'Mode Demo';
   }
 
-  // Settings Tab
+  // Settings Tab (Tab 9)
   const settingsLogo = document.getElementById('settings-logo-preview');
-  if (settingsLogo) settingsLogo.innerText = profile.logo || '🏪';
+  if (settingsLogo) renderLogoElement(settingsLogo, profile.logo, profile.name);
 
   const settingsName = document.getElementById('settings-store-name');
   if (settingsName && document.activeElement !== settingsName) settingsName.value = profile.name;
@@ -2046,8 +2586,61 @@ function renderStoreProfile() {
 function selectStoreLogo(emoji) {
   if (!state.storeProfile) state.storeProfile = { ...DEFAULT_STORE_PROFILE };
   state.storeProfile.logo = emoji;
+  if (state.currentUser) {
+    state.currentUser.logo = emoji;
+    localStorage.setItem('temanusaha_active_user', JSON.stringify(state.currentUser));
+    try {
+      let accounts = JSON.parse(localStorage.getItem('temanusaha_registered_accounts') || '[]');
+      const idx = accounts.findIndex(a => a.storeId === state.currentUser.storeId || a.email === state.currentUser.email);
+      if (idx !== -1) {
+        accounts[idx].logo = emoji;
+        localStorage.setItem('temanusaha_registered_accounts', JSON.stringify(accounts));
+      }
+    } catch(err) {}
+  }
   saveState();
   renderStoreProfile();
+}
+
+/**
+ * Mengunggah dan membaca foto / logo toko dari penyimpanan HP atau Laptop klien.
+ * Otomatis diubah menjadi Base64 Data URL dan disimpan ke profil toko & localStorage.
+ */
+function handleStoreLogoUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  // Batas ukuran 2MB agar hemat penyimpanan localStorage
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Ukuran file foto / logo maksimal 2MB. Silakan pilih foto dengan resolusi lebih kecil.');
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    if (!state.storeProfile) state.storeProfile = { ...DEFAULT_STORE_PROFILE };
+    state.storeProfile.logo = dataUrl;
+
+    if (state.currentUser) {
+      state.currentUser.logo = dataUrl;
+      localStorage.setItem('temanusaha_active_user', JSON.stringify(state.currentUser));
+      try {
+        let accounts = JSON.parse(localStorage.getItem('temanusaha_registered_accounts') || '[]');
+        const idx = accounts.findIndex(a => a.storeId === state.currentUser.storeId || a.email === state.currentUser.email);
+        if (idx !== -1) {
+          accounts[idx].logo = dataUrl;
+          localStorage.setItem('temanusaha_registered_accounts', JSON.stringify(accounts));
+        }
+      } catch(err) {}
+    }
+
+    saveState();
+    renderStoreProfile();
+    alert('✅ Foto / Logo toko berhasil diperbarui dari perangkat Anda!');
+  };
+  reader.readAsDataURL(file);
 }
 
 function saveStoreProfileSettings() {
@@ -2316,7 +2909,7 @@ function switchAuthMode(mode) {
   }
 }
 
-function handleRegisterSubmit(event) {
+async function handleRegisterSubmit(event) {
   if (event) event.preventDefault();
 
   const storeName = document.getElementById('reg-store-name').value.trim();
@@ -2359,6 +2952,31 @@ function handleRegisterSubmit(event) {
     return;
   }
 
+  // Siapkan data demo sesuai jenis usaha
+  const demoData = getDemoDataForBusinessType(businessType, storeName);
+
+  // Periksa apakah pengguna mengunggah foto / logo sendiri dari HP atau Laptop
+  const logoFileInput = document.getElementById('reg-logo-file');
+  let chosenLogo = demoData.logo || getBusinessEmoji(businessType);
+
+  if (logoFileInput && logoFileInput.files && logoFileInput.files[0]) {
+    const file = logoFileInput.files[0];
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran file foto/logo maksimal 2MB!');
+      return;
+    }
+    try {
+      chosenLogo = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => resolve(demoData.logo || '🏪');
+        reader.readAsDataURL(file);
+      });
+    } catch(err) {
+      chosenLogo = demoData.logo || '🏪';
+    }
+  }
+
   // Buat akun baru dengan Free Trial 1 Bulan (30 Hari)
   const storeId = 'store-' + Date.now();
   const trialExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -2381,6 +2999,7 @@ function handleRegisterSubmit(event) {
     email: email,
     password: pass,
     slug: slug,
+    logo: chosenLogo,
     createdAt: new Date().toISOString()
   };
 
@@ -2394,9 +3013,16 @@ function handleRegisterSubmit(event) {
     type: businessType,
     phone: phone,
     address: 'Alamat Toko Belum Diatur',
-    logo: '🏪',
+    logo: chosenLogo,
     email: email
   };
+
+  // Muat data inventaris, kas, dan transaksi contoh sesuai jenis usaha yang dipilih
+  state.products = demoData.products || [];
+  state.customers = demoData.customers || [];
+  state.transactions = demoData.transactions || [];
+  if (demoData.initialCash) state.initialCash = demoData.initialCash;
+
   state.subscription = {
     plan: 'trial',
     planName: 'Masa Uji Coba Gratis (30 Hari)',
@@ -2420,7 +3046,7 @@ function handleRegisterSubmit(event) {
   // Tampilkan notifikasi link toko agar mudah disalin
   setTimeout(() => showStoreURLNotification(slug), 500);
 
-  alert(`🎉 Selamat! Toko "${storeName}" berhasil didaftarkan.\n\nLink Toko Anda:\nhttps://andhyz16.github.io/temanusaha/?toko=${slug}\n\nAnda mendapatkan GRATIS 1 BULAN (30 Hari) masa sewa aplikasi TemanUsaha dengan akses semua fitur kasir dan asisten cerdas.`);
+  alert(`🎉 Selamat! Toko "${storeName}" berhasil didaftarkan.\n\nLink Toko Anda:\nhttps://andhyz16.github.io/temanusaha/?toko=${slug}\n\nContoh produk (${businessType}) telah disiapkan otomatis. Anda mendapatkan GRATIS 1 BULAN (30 Hari) masa sewa aplikasi TemanUsaha dengan akses semua fitur kasir dan asisten cerdas.`);
 }
 
 // ==================== SLUG & URL ROUTING ====================
@@ -2636,6 +3262,8 @@ function handleLoginSubmit(event) {
       state.storeProfile.type = userToSave.businessType || state.storeProfile.type;
       state.storeProfile.phone = userToSave.phone || state.storeProfile.phone;
       state.storeProfile.email = userToSave.email || state.storeProfile.email;
+      if (userToSave.logo) state.storeProfile.logo = userToSave.logo;
+      if (userToSave.address) state.storeProfile.address = userToSave.address;
     }
 
     saveState();
@@ -3210,6 +3838,13 @@ function redeemActivationPin() {
 
   alert(`🎉 SELAMAT! PIN LISENSI BERHASIL DIAKTIFKAN!\n\nMasa sewa Toko "${state.storeProfile.name}" bertambah +${days} hari.\nAktif sampai: ${formattedDate}`);
 }
+
+// Export fungsi global ke window agar dapat dipanggil dari HTML onclick / onchange
+window.handleStoreLogoUpload = handleStoreLogoUpload;
+window.renderLogoElement = renderLogoElement;
+window.getDemoDataForBusinessType = getDemoDataForBusinessType;
+window.selectStoreLogo = selectStoreLogo;
+window.handleRegisterSubmit = handleRegisterSubmit;
 
 // Jalankan aplikasi saat dokumen siap
 window.addEventListener('DOMContentLoaded', () => {
