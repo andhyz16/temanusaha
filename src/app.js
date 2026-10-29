@@ -1571,40 +1571,51 @@ function sharePromoWhatsApp() {
 
 // ==================== NAVIGASI TAB & MENU GARIS TIGA ====================
 function toggleSideMenu() {
-  const drawer = document.getElementById('sidebar-drawer');
-  const overlay = document.getElementById('sidebar-overlay');
-  if (!drawer || !overlay) return;
-
-  const isOpen = !drawer.classList.contains('-translate-x-full');
-  if (isOpen) {
-    closeSideMenu();
+  const container = document.getElementById('side-menu-container');
+  if (!container) return;
+  if (container.classList.contains('hidden')) {
+    openSideMenu();
   } else {
-    drawer.classList.remove('-translate-x-full');
-    overlay.classList.remove('opacity-0', 'pointer-events-none');
-    overlay.classList.add('opacity-100', 'pointer-events-auto');
-    document.body.classList.add('overflow-hidden');
+    closeSideMenu();
   }
 }
 
-function closeSideMenu() {
-  const drawer = document.getElementById('sidebar-drawer');
-  const overlay = document.getElementById('sidebar-overlay');
-  if (!drawer || !overlay) return;
+function openSideMenu() {
+  const container = document.getElementById('side-menu-container');
+  if (!container) return;
+  container.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
 
-  drawer.classList.add('-translate-x-full');
-  overlay.classList.remove('opacity-100', 'pointer-events-auto');
-  overlay.classList.add('opacity-0', 'pointer-events-none');
-  document.body.classList.remove('overflow-hidden');
+function closeSideMenu() {
+  const container = document.getElementById('side-menu-container');
+  if (!container) return;
+  container.classList.add('hidden');
+  document.body.style.overflow = '';
 }
 
 function selectMenu(tabId) {
-  switchTab(tabId);
   closeSideMenu();
+  switchTab(tabId);
 }
 
 function switchTab(tabId) {
   state.activeTab = tabId;
   const tabs = ['dashboard', 'cashier', 'inventory', 'debts', 'pricing', 'assistant', 'marketing'];
+  const titles = {
+    dashboard: '📊 Kondisi Usaha',
+    cashier: '⚡ Catat Cepat',
+    inventory: '📦 Stok & Kulakan',
+    debts: '📒 Buku Piutang',
+    pricing: '🏷️ Kalkulator Harga',
+    assistant: '💬 Tanya TemanUsaha',
+    marketing: '📢 Ide Promosi'
+  };
+
+  const pillTitle = document.getElementById('header-active-page-title');
+  if (pillTitle && titles[tabId]) {
+    pillTitle.innerText = titles[tabId];
+  }
 
   tabs.forEach(t => {
     const section = document.getElementById(`tab-${t}`);

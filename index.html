@@ -47,42 +47,29 @@
     }
   </style>
 
-  <!-- Inline Core Navigation Helpers (Langsung Aktif Tanpa Tergantung Cache) -->
+  <!-- Inline Core Navigation Helpers (100% Reliable Toggle) -->
   <script>
     function toggleSideMenu() {
-      const drawer = document.getElementById('sidebar-drawer');
-      if (!drawer) return;
-      const isOpen = drawer.style.transform === 'translateX(0%)' || drawer.style.transform === 'translateX(0px)';
-      if (isOpen) {
-        closeSideMenu();
-      } else {
+      const container = document.getElementById('side-menu-container');
+      if (!container) return;
+      if (container.classList.contains('hidden')) {
         openSideMenu();
+      } else {
+        closeSideMenu();
       }
     }
 
     function openSideMenu() {
-      const drawer = document.getElementById('sidebar-drawer');
-      const overlay = document.getElementById('sidebar-overlay');
-      if (!drawer || !overlay) return;
-      overlay.style.display = 'block';
-      overlay.style.pointerEvents = 'auto';
-      setTimeout(() => {
-        overlay.style.opacity = '1';
-        drawer.style.transform = 'translateX(0%)';
-      }, 10);
+      const container = document.getElementById('side-menu-container');
+      if (!container) return;
+      container.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
     }
 
     function closeSideMenu() {
-      const drawer = document.getElementById('sidebar-drawer');
-      const overlay = document.getElementById('sidebar-overlay');
-      if (!drawer || !overlay) return;
-      drawer.style.transform = 'translateX(-100%)';
-      overlay.style.opacity = '0';
-      overlay.style.pointerEvents = 'none';
-      setTimeout(() => {
-        overlay.style.display = 'none';
-      }, 300);
+      const container = document.getElementById('side-menu-container');
+      if (!container) return;
+      container.classList.add('hidden');
       document.body.style.overflow = '';
     }
 
@@ -97,163 +84,165 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
 
   <!-- ==================== SIDEBAR DRAWER (MENU GARIS TIGA) ==================== -->
-  <!-- Backdrop Overlay -->
-  <div id="sidebar-overlay" onclick="closeSideMenu()" style="display: none; opacity: 0; transition: opacity 0.3s ease;" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm pointer-events-none"></div>
+  <div id="side-menu-container" class="hidden fixed inset-0 z-50 flex">
+    <!-- Backdrop Overlay (Klik di luar menu untuk tutup) -->
+    <div onclick="closeSideMenu()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer"></div>
 
-  <!-- Sliding Drawer Panel -->
-  <aside id="sidebar-drawer" style="transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);" class="fixed top-0 left-0 bottom-0 z-50 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col justify-between border-r border-slate-200">
-    
-    <!-- Drawer Header -->
-    <div class="p-5 border-b border-slate-100 bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 text-white">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center font-extrabold text-xl shadow-inner">
-            TU
+    <!-- Sliding Drawer Panel -->
+    <aside class="relative w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col justify-between border-r border-slate-200 z-10 h-full overflow-hidden">
+      
+      <!-- Drawer Header -->
+      <div class="p-5 border-b border-slate-100 bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 text-white shrink-0">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center font-extrabold text-xl shadow-inner">
+              TU
+            </div>
+            <div>
+              <h2 class="font-extrabold text-base leading-tight">TemanUsaha</h2>
+              <span class="text-[10px] text-emerald-200 font-medium">Sahabat Bisnis UMKM Indonesia</span>
+            </div>
           </div>
+          <button onclick="closeSideMenu()" title="Tutup Menu" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Store Info Pill -->
+        <div class="bg-white/10 backdrop-blur rounded-xl p-2.5 border border-white/10 text-xs flex items-center justify-between">
           <div>
-            <h2 class="font-extrabold text-base leading-tight">TemanUsaha</h2>
-            <span class="text-[10px] text-emerald-200 font-medium">Sahabat Bisnis UMKM Indonesia</span>
+            <div class="font-bold text-white leading-tight">Toko Berkah Barokah</div>
+            <div class="text-[10px] text-emerald-200">Sembako & Kebutuhan Harian</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[9px] uppercase tracking-wider text-emerald-200">Kas Laci</div>
+            <div id="drawer-cash-in-hand" class="font-extrabold text-white text-xs">Rp 0</div>
           </div>
         </div>
-        <button onclick="closeSideMenu()" title="Tutup Menu" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
       </div>
 
-      <!-- Store Info Pill -->
-      <div class="bg-white/10 backdrop-blur rounded-xl p-2.5 border border-white/10 text-xs flex items-center justify-between">
-        <div>
-          <div class="font-bold text-white leading-tight">Toko Berkah Barokah</div>
-          <div class="text-[10px] text-emerald-200">Sembako & Kebutuhan Harian</div>
-        </div>
-        <div class="text-right">
-          <div class="text-[9px] uppercase tracking-wider text-emerald-200">Kas Laci</div>
-          <div id="drawer-cash-in-hand" class="font-extrabold text-white text-xs">Rp 0</div>
-        </div>
-      </div>
-    </div>
+      <!-- Drawer Navigation Links -->
+      <nav class="flex-1 overflow-y-auto p-3 space-y-1.5 text-xs font-semibold">
+        <div class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-slate-400 font-bold">Menu Utama Toko</div>
 
-    <!-- Drawer Navigation Links -->
-    <nav class="flex-1 overflow-y-auto p-3 space-y-1.5 text-xs font-semibold">
-      <div class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-slate-400 font-bold">Menu Utama Toko</div>
-
-      <!-- Menu 1: Dashboard -->
-      <button onclick="selectMenu('dashboard')" id="drawer-btn-dashboard" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group bg-emerald-50 text-emerald-800 font-bold">
-        <div class="flex items-center space-x-3">
-          <span class="text-lg">📊</span>
-          <div>
-            <div class="font-bold text-slate-900 group-hover:text-emerald-800">Kondisi Usaha</div>
-            <div class="text-[10px] text-slate-500 font-normal">Dashboard 1 halaman & arus kas</div>
+        <!-- Menu 1: Dashboard -->
+        <button onclick="selectMenu('dashboard')" id="drawer-btn-dashboard" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/60 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">📊</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-800">Kondisi Usaha</div>
+              <div class="text-[10px] text-slate-500 font-normal">Dashboard 1 halaman & arus kas</div>
+            </div>
           </div>
-        </div>
-        <span class="text-slate-400 group-hover:text-emerald-600">›</span>
-      </button>
-
-      <!-- Menu 2: Kasir Cepat -->
-      <button onclick="selectMenu('cashier')" id="drawer-btn-cashier" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
-        <div class="flex items-center space-x-3">
-          <span class="text-lg">⚡</span>
-          <div>
-            <div class="font-bold text-slate-900 group-hover:text-emerald-700">Catat Cepat (Kasir)</div>
-            <div class="text-[10px] text-slate-500 font-normal">Penjualan, operasional & ambil uang</div>
-          </div>
-        </div>
-        <span class="text-slate-400 group-hover:text-emerald-600">›</span>
-      </button>
-
-      <!-- Menu 3: Stok & Kulakan -->
-      <button onclick="selectMenu('inventory')" id="drawer-btn-inventory" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
-        <div class="flex items-center space-x-3">
-          <span class="text-lg">📦</span>
-          <div>
-            <div class="font-bold text-slate-900 group-hover:text-emerald-700">Stok & Kulakan</div>
-            <div class="text-[10px] text-slate-500 font-normal">Cegah habis barang & modal mati</div>
-          </div>
-        </div>
-        <div class="flex items-center space-x-1.5">
-          <span id="drawer-badge-critical" class="hidden text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold">0</span>
           <span class="text-slate-400 group-hover:text-emerald-600">›</span>
-        </div>
-      </button>
-
-      <!-- Menu 4: Buku Piutang -->
-      <button onclick="selectMenu('debts')" id="drawer-btn-debts" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
-        <div class="flex items-center space-x-3">
-          <span class="text-lg">📒</span>
-          <div>
-            <div class="font-bold text-slate-900 group-hover:text-emerald-700">Buku Piutang & WA</div>
-            <div class="text-[10px] text-slate-500 font-normal">Catatan bon & pengingat santun</div>
-          </div>
-        </div>
-        <div class="flex items-center space-x-1.5">
-          <span id="drawer-badge-debt" class="hidden text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">0</span>
-          <span class="text-slate-400 group-hover:text-emerald-600">›</span>
-        </div>
-      </button>
-
-      <div class="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-slate-400 font-bold">Alat Pintar Bisnis</div>
-
-      <!-- Menu 5: Kalkulator Harga -->
-      <button onclick="selectMenu('pricing')" id="drawer-btn-pricing" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
-        <div class="flex items-center space-x-3">
-          <span class="text-lg">🏷️</span>
-          <div>
-            <div class="font-bold text-slate-900 group-hover:text-emerald-700">Kalkulator Harga & Margin</div>
-            <div class="text-[10px] text-slate-500 font-normal">Hitung harga jual ecer & grosir anti-rugi</div>
-          </div>
-        </div>
-        <span class="text-slate-400 group-hover:text-emerald-600">›</span>
-      </button>
-
-      <!-- Menu 6: Tanya TemanUsaha -->
-      <button onclick="selectMenu('assistant')" id="drawer-btn-assistant" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
-        <div class="flex items-center space-x-3">
-          <span class="text-lg">💬</span>
-          <div>
-            <div class="font-bold text-slate-900 group-hover:text-emerald-700">Tanya TemanUsaha (AI)</div>
-            <div class="text-[10px] text-slate-500 font-normal">Konsultasi bisnis berdasar angka riil</div>
-          </div>
-        </div>
-        <span class="text-slate-400 group-hover:text-emerald-600">›</span>
-      </button>
-
-      <!-- Menu 7: Ide Promosi -->
-      <button onclick="selectMenu('marketing')" id="drawer-btn-marketing" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
-        <div class="flex items-center space-x-3">
-          <span class="text-lg">📢</span>
-          <div>
-            <div class="font-bold text-slate-900 group-hover:text-emerald-700">Ide Promosi & Status WA</div>
-            <div class="text-[10px] text-slate-500 font-normal">Cairkan barang menumpuk lewat promo</div>
-          </div>
-        </div>
-        <span class="text-slate-400 group-hover:text-emerald-600">›</span>
-      </button>
-    </nav>
-
-    <!-- Drawer Footer -->
-    <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-2.5 text-xs">
-      <div class="flex items-center justify-between text-slate-500">
-        <div class="flex items-center space-x-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="text-[11px] font-semibold text-slate-700">Firebase Cloud Aktif</span>
-        </div>
-        <span class="text-[10px] text-slate-400">v1.2 PWA</span>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2 pt-1">
-        <button onclick="confirmResetData(); closeSideMenu();" class="py-2 px-3 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-center font-semibold text-[11px] flex items-center justify-center space-x-1">
-          <span>🔄</span>
-          <span>Reset Demo</span>
         </button>
-        <a href="https://github.com/andhyz16/temanusaha" target="_blank" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-center font-semibold text-[11px] flex items-center justify-center space-x-1">
-          <span>🐙</span>
-          <span>GitHub</span>
-        </a>
+
+        <!-- Menu 2: Kasir Cepat -->
+        <button onclick="selectMenu('cashier')" id="drawer-btn-cashier" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">⚡</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Catat Cepat (Kasir)</div>
+              <div class="text-[10px] text-slate-500 font-normal">Penjualan, operasional & ambil uang</div>
+            </div>
+          </div>
+          <span class="text-slate-400 group-hover:text-emerald-600">›</span>
+        </button>
+
+        <!-- Menu 3: Stok & Kulakan -->
+        <button onclick="selectMenu('inventory')" id="drawer-btn-inventory" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">📦</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Stok & Kulakan</div>
+              <div class="text-[10px] text-slate-500 font-normal">Cegah habis barang & modal mati</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span id="drawer-badge-critical" class="hidden text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold">0</span>
+            <span class="text-slate-400 group-hover:text-emerald-600">›</span>
+          </div>
+        </button>
+
+        <!-- Menu 4: Buku Piutang -->
+        <button onclick="selectMenu('debts')" id="drawer-btn-debts" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">📒</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Buku Piutang & WA</div>
+              <div class="text-[10px] text-slate-500 font-normal">Catatan bon & pengingat santun</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span id="drawer-badge-debt" class="hidden text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">0</span>
+            <span class="text-slate-400 group-hover:text-emerald-600">›</span>
+          </div>
+        </button>
+
+        <div class="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-slate-400 font-bold">Alat Pintar Bisnis</div>
+
+        <!-- Menu 5: Kalkulator Harga -->
+        <button onclick="selectMenu('pricing')" id="drawer-btn-pricing" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">🏷️</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Kalkulator Harga & Margin</div>
+              <div class="text-[10px] text-slate-500 font-normal">Hitung harga jual ecer & grosir anti-rugi</div>
+            </div>
+          </div>
+          <span class="text-slate-400 group-hover:text-emerald-600">›</span>
+        </button>
+
+        <!-- Menu 6: Tanya TemanUsaha -->
+        <button onclick="selectMenu('assistant')" id="drawer-btn-assistant" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">💬</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Tanya TemanUsaha (AI)</div>
+              <div class="text-[10px] text-slate-500 font-normal">Konsultasi bisnis berdasar angka riil</div>
+            </div>
+          </div>
+          <span class="text-slate-400 group-hover:text-emerald-600">›</span>
+        </button>
+
+        <!-- Menu 7: Ide Promosi -->
+        <button onclick="selectMenu('marketing')" id="drawer-btn-marketing" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">📢</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Ide Promosi & Status WA</div>
+              <div class="text-[10px] text-slate-500 font-normal">Cairkan barang menumpuk lewat promo</div>
+            </div>
+          </div>
+          <span class="text-slate-400 group-hover:text-emerald-600">›</span>
+        </button>
+      </nav>
+
+      <!-- Drawer Footer -->
+      <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-2.5 text-xs shrink-0">
+        <div class="flex items-center justify-between text-slate-500">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[11px] font-semibold text-slate-700">Firebase Cloud Aktif</span>
+          </div>
+          <span class="text-[10px] text-slate-400">v1.2 PWA</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="confirmResetData(); closeSideMenu();" class="py-2 px-3 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-center font-semibold text-[11px] flex items-center justify-center space-x-1">
+            <span>🔄</span>
+            <span>Reset Demo</span>
+          </button>
+          <a href="https://github.com/andhyz16/temanusaha" target="_blank" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-center font-semibold text-[11px] flex items-center justify-center space-x-1">
+            <span>🐙</span>
+            <span>GitHub</span>
+          </a>
+        </div>
       </div>
-    </div>
-  </aside>
+    </aside>
+  </div>
 
   <!-- Top App Bar / Header -->
   <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
