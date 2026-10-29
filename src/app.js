@@ -182,12 +182,12 @@ const DEFAULT_TRANSACTIONS = [
 
 // ==================== STATE MANAGEMENT ====================
 const DEFAULT_STORE_PROFILE = {
-  name: 'Toko Berkah Barokah',
+  name: 'Toko TemanUsaha',
   type: 'Sembako & Kebutuhan Harian',
-  phone: '08123456789',
-  address: 'Pasar Induk Blok A No. 12',
+  phone: '',
+  address: '',
   logo: '🏪',
-  email: 'pemilik@toko.com'
+  email: ''
 };
 
 const DEFAULT_SUBSCRIPTION = {
@@ -478,27 +478,12 @@ window.closeLandingAndRegister = closeLandingAndRegister;
 window.closeLandingAndLogin = closeLandingAndLogin;
 
 function initApp() {
-  // ==================== PEMBERSIHAN OTOMATIS DATA SAMPLE LAMA ====================
-  // Bersihkan akun toko sample bawaan lama (Anw beautycare, HauraJewelry, dll) dari memori browser
-  const DUMMY_IDS = ['store-anw-beauty', 'store-haura-jewelry', 'store-berkah-barokah'];
-  const DUMMY_EMAILS = ['atikah.nurfadhilah@gmail.com', 'khulafaurrasyidin04@gmail.com', 'pemilik@toko.com'];
-  
-  try {
-    const actRaw = localStorage.getItem('temanusaha_active_user');
-    if (actRaw) {
-      const act = JSON.parse(actRaw);
-      if (DUMMY_IDS.includes(act.storeId) || DUMMY_EMAILS.includes(act.email)) {
-        localStorage.removeItem('temanusaha_active_user');
-      }
-    }
-    const remRaw = localStorage.getItem('temanusaha_remembered_user');
-    if (remRaw) {
-      const rem = JSON.parse(remRaw);
-      if (DUMMY_IDS.includes(rem.storeId) || DUMMY_EMAILS.includes(rem.email)) {
-        localStorage.removeItem('temanusaha_remembered_user');
-      }
-    }
-  } catch(e) {}
+  // ==================== PEMBERSIHAN OTOMATIS SATU KALI ====================
+  // Bersihkan total cache browser lama agar mulai bersih dari 0 toko
+  if (!localStorage.getItem('temanusaha_clean_v4')) {
+    localStorage.clear();
+    localStorage.setItem('temanusaha_clean_v4', 'true');
+  }
 
   // ==================== CEK URL ROUTING (?toko=slug) ====================
   // Jika ada parameter ?toko=namatoko di URL, muat data toko tersebut
@@ -599,16 +584,15 @@ function initApp() {
   if (newDebtDueEl) newDebtDueEl.value = tomorrow;
 
   calculatePricingTiers();
-  renderAll();
 
-  // Tampilan awal: Tampilkan Landing Page atau Auth Modal
-  // KECUALI jika sedang mengunjungi profil toko orang lain (sudah ditangani di atas)
+  // Tampilan awal: Jika belum login dan bukan kunjungan ke slug toko,
+  // TAMPILKAN PORTAL PENDAFTARAN & MASUK AKUN (dashboard tetap tersembunyi)
   if (!state.currentUser && !urlSlug) {
-    // User belum login dan tidak ada slug toko — tampilkan landing page publik
     showPublicLandingPage();
-  } else if (!state.currentUser && urlSlug) {
-    // Jika ada slug tapi bukan pemilik — openAuthModal sudah ditangani di showStoreLandingPage
-    // Jangan buka auth modal otomatis
+  } else if (state.currentUser) {
+    // Jika sudah ada user login yang sah, buka dashboard
+    removeLandingPageAndRestoreApp();
+    renderAll();
   }
 
   // 2. Hubungkan ke Firebase Firestore Cloud Sync
@@ -624,10 +608,17 @@ function connectFirestoreSync() {
     return;
   }
 
-  const storeDocId = (state.currentUser && state.currentUser.storeId) ? state.currentUser.storeId : 'toko-berkah';
+  // PENTING: Hanya sinkronkan data toko jika pengguna SUDAH login dan memiliki storeId sah!
+  // Jangan sync sembarangan ke dokumen dummy (seperti toko-berkah) yang berisi data toko lama.
+  if (!state.currentUser || !state.currentUser.storeId || state.currentUser.role === 'super_admin') {
+    setCloudStatus('connected', 'Firebase Cloud Siap ✓');
+    return;
+  }
+
+  const storeDocId = state.currentUser.storeId;
   const storeDocRef = db.collection('stores').doc(storeDocId);
 
-  // Real-time listener dari Firestore Cloud
+  // Real-time listener dari Firestore Cloud untuk toko yang sedang login
   unsubscribeFirestore = storeDocRef.onSnapshot((doc) => {
     if (doc.exists) {
       const data = doc.data();
@@ -653,27 +644,10 @@ function connectFirestoreSync() {
 
       setCloudStatus('connected', 'Firebase Terhubung ✓');
       renderAll();
-    } else {
-      // Pertama kali: Simpan data awal toko ke Firestore
-      storeDocRef.set({
-        initialCash: state.initialCash,
-        products: state.products,
-        customers: state.customers,
-        transactions: state.transactions,
-        chatHistory: state.chatHistory,
-        storeProfile: state.storeProfile,
-        subscription: state.subscription,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        setCloudStatus('connected', 'Firebase Terhubung ✓');
-      }).catch(err => {
-        console.warn('Gagal inisialisasi Firestore:', err);
-        setCloudStatus('offline', 'Mode Offline');
-      });
     }
-  }, (error) => {
-    console.warn('Firestore Snapshot error:', error);
-    setCloudStatus('offline', 'Mode Offline (Lokal)');
+  }, (err) => {
+    console.warn('Firestore sync error:', err);
+    setCloudStatus('offline', 'Offline');
   });
 }
 
@@ -2295,6 +2269,12 @@ window.switchAuthMode = switchAuthMode;
  * Menghapus landing/store page overlay dan menampilkan kembali app shell utama.
  */
 function removeLandingPageAndRestoreApp() {
+  const modal = document.getElementById('auth-portal-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+
   const landing = document.getElementById('public-landing-page');
   if (landing) landing.remove();
   
@@ -2305,10 +2285,10 @@ function removeLandingPageAndRestoreApp() {
   if (notFoundPage) notFoundPage.remove();
   
   const appMain = document.getElementById('main-app-shell');
-  if (appMain) appMain.style.display = '';
+  if (appMain) appMain.style.display = 'block';
   
   const header = document.getElementById('main-header');
-  if (header) header.style.display = '';
+  if (header) header.style.display = 'block';
   
   const sideMenu = document.getElementById('side-menu-container');
   if (sideMenu) sideMenu.style.display = '';
