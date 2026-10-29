@@ -2368,6 +2368,8 @@ function openAuthModal() {
   const modal = document.getElementById('auth-portal-modal');
   if (!modal) return;
   modal.classList.remove('hidden');
+  modal.style.display = 'flex';
+  modal.style.zIndex = '9999';
   closeSideMenu();
 }
 
@@ -2375,6 +2377,7 @@ function closeAuthModal() {
   const modal = document.getElementById('auth-portal-modal');
   if (!modal) return;
   modal.classList.add('hidden');
+  modal.style.display = 'none';
   
   // Jika landing page masih tampil dan user sudah login, hapus landing page & restore app
   if (state.currentUser) {
@@ -2784,6 +2787,8 @@ function openSuperAdminModal() {
   const modal = document.getElementById('super-admin-modal');
   if (!modal) return;
   modal.classList.remove('hidden');
+  modal.style.display = 'flex';
+  modal.style.zIndex = '9999';
   document.body.style.overflow = 'hidden';
   refreshAdminMemberList();
   renderAdminPinList();
@@ -2793,6 +2798,7 @@ function closeSuperAdminModal() {
   const modal = document.getElementById('super-admin-modal');
   if (!modal) return;
   modal.classList.add('hidden');
+  modal.style.display = 'none';
   document.body.style.overflow = '';
 }
 
