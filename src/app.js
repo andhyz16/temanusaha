@@ -515,10 +515,10 @@ function renderDashboard(metrics) {
       <div class="flex items-start space-x-3">
         <span class="text-2xl">⚠️</span>
         <div>
-          <h4 class="font-extrabold text-sm sm:text-base text-red-900">Perhatian: Modal Belanja Ulang Toko Sedang Tergerus!</h4>
+          <h4 class="font-extrabold text-sm sm:text-base text-red-900">Perhatian: Modal Belanja Barang Toko Sedang Tergerus!</h4>
           <p class="text-xs text-red-800 mt-0.5">
             Pengambilan uang pribadi hari ini (${formatRupiah(metrics.totalPersonalDraw)}) lebih besar dari laba bersih (${formatRupiah(metrics.netProfit)}).
-            Ada <strong>${formatRupiah(metrics.capitalErosionAmount)} uang modal kulakan yang terpakai</strong>.
+            Ada <strong>${formatRupiah(metrics.capitalErosionAmount)} uang modal belanja barang yang terpakai</strong>.
           </p>
         </div>
       </div>
@@ -532,7 +532,7 @@ function renderDashboard(metrics) {
       <div class="flex items-start space-x-3">
         <span class="text-2xl">🛡️</span>
         <div>
-          <h4 class="font-extrabold text-sm sm:text-base text-emerald-900">Keuangan Toko Sehat: Modal Belanja Ulang Aman Terjaga</h4>
+          <h4 class="font-extrabold text-sm sm:text-base text-emerald-900">Keuangan Toko Sehat: Modal Belanja Barang Aman Terjaga</h4>
           <p class="text-xs text-emerald-800 mt-0.5">
             Modal barang terjual (${formatRupiah(metrics.lockedRestockFund)}) aman terisolasi. Anda memiliki sisa uang dingin <strong>${formatRupiah(metrics.safePersonalAllowance)}</strong> yang boleh diambil untuk keperluan pribadi.
           </p>
@@ -581,7 +581,7 @@ function renderDashboard(metrics) {
           </p>
         </div>
         <button onclick="switchTab('inventory'); filterInventory('critical');" class="mt-3 text-xs font-bold text-amber-900 hover:text-amber-950 flex items-center space-x-1">
-          <span>Lihat daftar kulakan</span>
+          <span>Lihat daftar belanja barang</span>
           <span>→</span>
         </button>
       </div>
@@ -700,7 +700,7 @@ function renderDashboard(metrics) {
       profitBadge = `<span class="text-purple-600 font-semibold">-${formatRupiah(t.totalAmount)} (Prive)</span>`;
       desc = `${t.description}`;
     } else if (t.type === 'expense_stock') {
-      typeBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]">Kulakan Stok</span>`;
+      typeBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]">Belanja Barang</span>`;
       profitBadge = `<span class="text-amber-700 font-semibold">Aset Masuk Gudang</span>`;
       desc = `${t.description}`;
     }
@@ -995,7 +995,7 @@ function calculatePersonalDrawImpact() {
       </div>
       <p class="text-red-800 leading-relaxed">
         Jika Anda mengambil <strong>${formatRupiah(amount)}</strong>, total uang pribadi diambil menjadi ${formatRupiah(metrics.totalPersonalDraw + amount)}, melebihi laba bersih hari ini (${formatRupiah(metrics.netProfit)}).<br>
-        Uang kas toko akan berkurang dan jatah modal kulakan besok akan berkurang ${formatRupiah(tergerus)}.
+        Uang kas toko akan berkurang dan jatah modal belanja barang besok akan berkurang ${formatRupiah(tergerus)}.
       </p>
     `;
   } else {
@@ -1109,8 +1109,8 @@ function renderInventory(metrics) {
         <td class="py-3 px-4 text-center">${statusPill}</td>
         <td class="py-3 px-4 text-right font-bold text-slate-700">${formatRupiah(lockedCapital)}</td>
         <td class="py-3 px-4 text-center">
-          <button onclick="openRestockModal('${p.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold shadow-sm">
-            + Kulakan
+          <button onclick="openRestockModal('${p.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold shadow-sm whitespace-nowrap">
+            + Belanja Barang
           </button>
         </td>
       </tr>
@@ -1202,12 +1202,12 @@ function submitRestock() {
   const now = new Date();
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  // Catat transaksi kulakan stok
+  // Catat transaksi belanja barang
   state.transactions.push({
     id: 'trx-' + Date.now(),
     time: timeStr,
     type: 'expense_stock',
-    description: `Kulakan ${prod.name} (${qty} ${prod.unit})`,
+    description: `Belanja ${prod.name} (${qty} ${prod.unit})`,
     category: 'Stok Barang',
     totalAmount: totalCost
   });
@@ -1215,7 +1215,7 @@ function submitRestock() {
   closeRestockModal();
   saveState();
   renderAll();
-  alert(`Stok ${prod.name} bertambah ${qty} ${prod.unit}. Kas keluar kulakan ${formatRupiah(totalCost)} dicatat.`);
+  alert(`Stok ${prod.name} bertambah ${qty} ${prod.unit}. Kas keluar belanja barang ${formatRupiah(totalCost)} dicatat.`);
 }
 
 // ==================== TAB 4: BUKU PIUTANG ====================
@@ -1492,12 +1492,12 @@ function handleChatSubmit(e) {
     aiReply = `Berikut data produk terbaik toko Anda:\n\n🥇 **Penyumbang Laba Harian Terbesar:**\n1. **${p1.name}**: Estimasi laba ${formatRupiah(p1.estDaily)}/hari (~${p1.dailySalesAvg} ${p1.unit}/hari, margin ${p1.marginPct}%)\n2. **${p2.name}**: Estimasi laba ${formatRupiah(p2.estDaily)}/hari\n\n🎯 **Saran TemanUsaha:**\nJangan sampai kedua barang ini kehabisan stok, karena inilah mesin penghasil uang kas harian toko Anda!`;
   } else if (q.includes('modal') || q.includes('5 juta') || q.includes('uang')) {
     const restockEst = metrics.criticalItems.reduce((acc, i) => acc + i.costEst, 0);
-    aiReply = `Jika Anda memiliki modal cadangan Rp 5 juta, berikut saran pembagian alokasi paling aman:\n\n1. **Kulakan Stok Kritis (40% - ~${formatRupiah(restockEst || 1500000)}):**\nAmankan barang cepat laku yang hampir habis (${metrics.criticalItems.map(i => i.name).join(', ') || 'Beras & Minyak'}).\n\n2. **Kas Cadangan Operasional (35% - Rp 1.750.000):**\nSimpan di rekening terpisah untuk antisipasi distributor naik harga mendadak.\n\n3. **Coba Produk Baru (15% - Rp 750.000):**\nKulakan produk yang sering ditanyakan tetangga tetapi belum Anda jual.\n\n4. **Hak Uang Pribadi (10% - Rp 500.000):**\nSisihkan untuk keperluan rumah tangga agar tidak mengganggu uang kas toko.`;
+    aiReply = `Jika Anda memiliki modal cadangan Rp 5 juta, berikut saran pembagian alokasi paling aman:\n\n1. **Belanja Barang Stok Kritis (40% - ~${formatRupiah(restockEst || 1500000)}):**\nAmankan barang cepat laku yang hampir habis (${metrics.criticalItems.map(i => i.name).join(', ') || 'Beras & Minyak'}).\n\n2. **Kas Cadangan Operasional (35% - Rp 1.750.000):**\nSimpan di rekening terpisah untuk antisipasi distributor naik harga mendadak.\n\n3. **Coba Produk Baru (15% - Rp 750.000):**\nBelanja produk yang sering ditanyakan tetangga tetapi belum Anda jual.\n\n4. **Hak Uang Pribadi (10% - Rp 500.000):**\nSisihkan untuk keperluan rumah tangga agar tidak mengganggu uang kas toko.`;
   } else if (q.includes('pribadi') || q.includes('ambil uang') || q.includes('250')) {
     if (metrics.isPersonalOverdrawn) {
-      aiReply = `⚠️ **Jangan Ambil Uang Kas Dulu Hari Ini!**\n\nCatatan Anda menunjukkan hari ini sudah diambil uang pribadi sebesar ${formatRupiah(metrics.totalPersonalDraw)}, padahal laba bersih baru ${formatRupiah(metrics.netProfit)}.\n\nSudah ada **${formatRupiah(metrics.capitalErosionAmount)} modal belanja ulang yang tergerus**. Jika diambil Rp 250.000 lagi, modal belanja barang besok akan semakin kurang.`;
+      aiReply = `⚠️ **Jangan Ambil Uang Kas Dulu Hari Ini!**\n\nCatatan Anda menunjukkan hari ini sudah diambil uang pribadi sebesar ${formatRupiah(metrics.totalPersonalDraw)}, padahal laba bersih baru ${formatRupiah(metrics.netProfit)}.\n\nSudah ada **${formatRupiah(metrics.capitalErosionAmount)} modal belanja barang yang tergerus**. Jika diambil Rp 250.000 lagi, modal belanja barang besok akan semakin kurang.`;
     } else {
-      aiReply = `✅ **Aman untuk Diambil!**\n\nSetelah mengamankan modal belanja barang terjual (${formatRupiah(metrics.lockedRestockFund)}) dan biaya operasional, sisa laba bersih Anda saat ini adalah **${formatRupiah(metrics.safePersonalAllowance)}**.\n\nMengambil Rp 250.000 masih dalam batas aman dan tidak mengganggu modal kulakan toko.`;
+      aiReply = `✅ **Aman untuk Diambil!**\n\nSetelah mengamankan modal belanja barang terjual (${formatRupiah(metrics.lockedRestockFund)}) dan biaya operasional, sisa laba bersih Anda saat ini adalah **${formatRupiah(metrics.safePersonalAllowance)}**.\n\nMengambil Rp 250.000 masih dalam batas aman dan tidak mengganggu modal belanja barang toko.`;
     }
   } else if (q.includes('karyawan') || q.includes('pegawai')) {
     aiReply = `Mari kita hitung secara rasional tanpa tebak-tebakan:\n\n• Misalkan gaji 1 karyawan toko adalah Rp 1.500.000/bulan.\n• Rata-rata margin bersih toko Anda adalah ~12%.\n• Untuk menutup gaji tersebut, toko harus menghasilkan omzet tambahan minimal:\n  Rp 1.500.000 ÷ 12% = **Rp 12.500.000/bulan** (~Rp 420.000/hari).\n\n💡 **Kesimpulan TemanUsaha:**\nBila dengan ada karyawan Anda bisa fokus menambah omzet di atas Rp 420.000/hari (misal pesan antar grosir atau katering), maka merekrut karyawan **sangat layak**. Namun jika hanya untuk menjaga kasir sementara omzet tetap sama, sebaiknya gunakan pencatatan kilat ini terlebih dahulu.`;
@@ -1605,7 +1605,7 @@ function switchTab(tabId) {
   const titles = {
     dashboard: '📊 Kondisi Usaha',
     cashier: '⚡ Catat Cepat',
-    inventory: '📦 Stok & Kulakan',
+    inventory: '📦 Stok & Belanja Barang',
     debts: '📒 Buku Piutang',
     pricing: '🏷️ Kalkulator Harga',
     assistant: '💬 Tanya TemanUsaha',

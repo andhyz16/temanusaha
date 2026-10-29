@@ -151,12 +151,12 @@
           <span class="text-slate-400 group-hover:text-emerald-600">›</span>
         </button>
 
-        <!-- Menu 3: Stok & Kulakan -->
+        <!-- Menu 3: Stok & Belanja Barang -->
         <button onclick="selectMenu('inventory')" id="drawer-btn-inventory" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
           <div class="flex items-center space-x-3">
             <span class="text-lg">📦</span>
             <div>
-              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Stok & Kulakan</div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Stok & Belanja Barang</div>
               <div class="text-[10px] text-slate-500 font-normal">Cegah habis barang & modal mati</div>
             </div>
           </div>
@@ -329,7 +329,7 @@
           </div>
           <div>
             <div id="metric-locked-fund" class="text-2xl font-extrabold text-amber-900">Rp 0</div>
-            <p class="text-xs text-amber-800/80 mt-1">HPP dari barang terjual untuk kulakan stok kembali</p>
+            <p class="text-xs text-amber-800/80 mt-1">HPP dari barang terjual untuk belanja barang kembali</p>
           </div>
         </div>
 
@@ -554,7 +554,7 @@
             <select id="ops-category" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:outline-emerald-500">
               <option value="Plastik & Kemasan">Plastik & Kemasan</option>
               <option value="Listrik & Air">Listrik & Air</option>
-              <option value="Transport & Bensin">Transport & Bensin Kulakan</option>
+              <option value="Transport & Bensin">Transport & Bensin Belanja Barang</option>
               <option value="Kebersihan & Perlengkapan">Kebersihan & Perlengkapan</option>
               <option value="Lain-lain">Lain-lain</option>
             </select>
@@ -671,7 +671,7 @@
                 <th class="py-3 px-4 text-center">Stok</th>
                 <th class="py-3 px-4 text-center">Prediksi Habis</th>
                 <th class="py-3 px-4 text-right">Modal Tertahan</th>
-                <th class="py-3 px-4 text-center">Aksi Kulakan</th>
+                <th class="py-3 px-4 text-center">Aksi Belanja</th>
               </tr>
             </thead>
             <tbody id="inventory-table-body" class="divide-y divide-slate-100 font-medium">
@@ -758,7 +758,7 @@
 
           <div class="space-y-4 text-xs">
             <div>
-              <label class="block font-semibold text-slate-700 mb-1">Harga Beli / Modal Kulakan per unit (Rp):</label>
+              <label class="block font-semibold text-slate-700 mb-1">Harga Beli / Modal Belanja per unit (Rp):</label>
               <input type="number" id="calc-cost-price" value="80000" oninput="calculatePricingTiers()" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-base font-bold text-slate-800 focus:outline-emerald-500">
             </div>
 
@@ -904,7 +904,7 @@
 
         <!-- Chat Input Bar -->
         <form onsubmit="handleChatSubmit(event)" class="p-3 bg-white border-t border-slate-200 flex items-center space-x-2">
-          <input type="text" id="chat-input" placeholder="Tanyakan kondisi usaha Anda (misal: stok mana yang harus saya kulakan duluan?)..." class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-emerald-500">
+          <input type="text" id="chat-input" placeholder="Tanyakan kondisi usaha Anda (misal: stok mana yang harus saya belanja duluan?)..." class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-emerald-500">
           <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1 shadow-md shadow-emerald-600/20">
             <span>Kirim</span>
             <span>➤</span>
@@ -1091,11 +1091,11 @@
     </div>
   </div>
 
-  <!-- Modal 3: Kulakan Tambah Stok -->
+  <!-- Modal 3: Belanja Barang / Tambah Stok -->
   <div id="modal-restock" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="font-bold text-slate-900 text-sm">Kulakan / Tambah Stok</h3>
+        <h3 class="font-bold text-slate-900 text-sm">Belanja Barang / Tambah Stok</h3>
         <button onclick="closeRestockModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
       </div>
 
@@ -1113,7 +1113,7 @@
           <input type="number" id="restock-unit-cost" oninput="updateRestockTotal()" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-emerald-500">
         </div>
         <div class="p-3 bg-amber-50 rounded-lg text-amber-900 border border-amber-200 flex justify-between items-center">
-          <span>Total Biaya Kulakan:</span>
+          <span>Total Biaya Belanja Barang:</span>
           <span id="restock-total-cost" class="font-bold text-sm">Rp 0</span>
         </div>
       </div>
