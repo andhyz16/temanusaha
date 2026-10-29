@@ -299,6 +299,11 @@ function initApp() {
   calculatePricingTiers();
   renderAll();
 
+  // Tampilan awal: Buka form pendaftaran / masuk toko secara otomatis jika pengguna belum login
+  if (!state.currentUser) {
+    openAuthModal();
+  }
+
   // 2. Hubungkan ke Firebase Firestore Cloud Sync
   if (typeof initFirebase === 'function') {
     initFirebase();
