@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TemanUsaha - Sahabat Bisnis UMKM Indonesia</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Font Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top App Bar / Header -->
+  <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 font-extrabold text-xl">
+          TU
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold text-slate-900 leading-tight">TemanUsaha</h1>
+            <span class="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full uppercase tracking-wider">Asisten UMKM</span>
+          </div>
+          <p id="store-title" class="text-xs text-slate-500 font-medium">Toko Berkah Barokah • Sembako & Harian</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <!-- Firebase Cloud Status Badge -->
+        <div id="cloud-status-badge" class="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold">
+          <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="cloud-status-text">Firebase Cloud</span>
+        </div>
+        <!-- Quick Cash Pill -->
+        <div class="hidden sm:flex flex-col items-end px-3 py-1 bg-slate-100 rounded-lg border border-slate-200">
+          <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Uang Kas di Laci</span>
+          <span id="header-cash-in-hand" class="text-xs font-bold text-emerald-700">Rp 0</span>
+        </div>
+        <!-- Reset Data Button -->
+        <button onclick="confirmResetData()" title="Reset ke data contoh toko" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-medium flex items-center space-x-1 border border-slate-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="hidden md:inline">Reset Demo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs (Mobile Scrollable) -->
+    <nav class="max-w-6xl mx-auto px-2 flex space-x-1 overflow-x-auto hide-scrollbar text-xs font-medium border-t border-slate-100 bg-slate-50/70">
+      <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-emerald-600 text-emerald-700 font-bold flex items-center space-x-1.5 whitespace-nowrap">
+        <span>📊</span>
+        <span>Kondisi Usaha</span>
+      </button>
+      <button onclick="switchTab('cashier')" id="tab-btn-cashier" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
+        <span>⚡</span>
+        <span>Catat Cepat</span>
+      </button>
+      <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
+        <span>📦</span>
+        <span>Stok & Kulakan</span>
+        <span id="badge-critical-stock" class="hidden text-[10px] bg-amber-500 text-white px-1.5 py-0.2 rounded-full font-bold">0</span>
+      </button>
+      <button onclick="switchTab('debts')" id="tab-btn-debts" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
+        <span>📒</span>
+        <span>Buku Piutang</span>
+        <span id="badge-urgent-debt" class="hidden text-[10px] bg-red-500 text-white px-1.5 py-0.2 rounded-full font-bold">0</span>
+      </button>
+      <button onclick="switchTab('pricing')" id="tab-btn-pricing" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
+        <span>🏷️</span>
+        <span>Kalkulator Harga</span>
+      </button>
+      <button onclick="switchTab('assistant')" id="tab-btn-assistant" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
+        <span>💬</span>
+        <span>Tanya TemanUsaha</span>
+      </button>
+      <button onclick="switchTab('marketing')" id="tab-btn-marketing" class="tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap">
+        <span>📢</span>
+        <span>Ide Promosi</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- ==================== TAB 1: DASHBOARD KONDISI USAHA ==================== -->
+    <section id="tab-dashboard" class="space-y-6">
+      
+      <!-- Top Health Status Banner -->
+      <div id="health-banner" class="rounded-2xl p-4 sm:p-5 border transition-all duration-300">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Financial Guardrails: Pemisah Uang Usaha vs Uang Pribadi -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Card 1: Kas di Tangan -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Uang Kas di Laci</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">💵</div>
+          </div>
+          <div>
+            <div id="metric-cash-in-hand" class="text-2xl font-extrabold text-slate-900">Rp 0</div>
+            <p class="text-xs text-slate-500 mt-1">Uang tunai fisik yang ada di toko saat ini</p>
+          </div>
+        </div>
+
+        <!-- Card 2: Modal Belanja Ulang (TERKUNCI) -->
+        <div class="bg-amber-50/50 rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-amber-700 mb-2">
+            <div class="flex items-center space-x-1">
+              <span class="text-xs font-bold uppercase tracking-wider">🔒 Modal Belanja Ulang</span>
+            </div>
+            <span class="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">JANGAN DIAMBIL</span>
+          </div>
+          <div>
+            <div id="metric-locked-fund" class="text-2xl font-extrabold text-amber-900">Rp 0</div>
+            <p class="text-xs text-amber-800/80 mt-1">HPP dari barang terjual untuk kulakan stok kembali</p>
+          </div>
+        </div>
+
+        <!-- Card 3: Uang Dingin Aman Bawa Pulang (Laba Bersih) -->
+        <div class="bg-emerald-50/50 rounded-2xl p-4 sm:p-5 border border-emerald-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-emerald-700 mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider">💰 Uang Dingin / Laba Bersih</span>
+            <span class="text-[10px] font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">AMAN DIAMBIL</span>
+          </div>
+          <div>
+            <div id="metric-safe-draw" class="text-2xl font-extrabold text-emerald-800">Rp 0</div>
+            <p class="text-xs text-emerald-700/80 mt-1">Sisa laba murni hari ini yang boleh untuk keperluan rumah</p>
+          </div>
+        </div>
+
+        <!-- Card 4: Pengambilan Pribadi Hari Ini -->
+        <div id="card-personal-draw" class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Uang Pribadi Diambil</span>
+            <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold">🏠</div>
+          </div>
+          <div>
+            <div id="metric-personal-draw" class="text-2xl font-extrabold text-slate-900">Rp 0</div>
+            <p id="metric-personal-draw-note" class="text-xs text-slate-500 mt-1">Uang belanja dapur & uang saku anak hari ini</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Peringatan Penting Hari Ini -->
+      <div class="space-y-3">
+        <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+          <span>🔔</span>
+          <span>Perhatian Mendesak Hari Ini</span>
+        </h2>
+        <div id="morning-brief-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Rincian Transaksi & Laba Hari Ini -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Arus Kas & Kalkulasi Laba Hari Ini</h3>
+            <p class="text-xs text-slate-500">Bukan sekadar omzet kotor, tapi laba riil setelah HPP dan operasional</p>
+          </div>
+          <button onclick="switchTab('cashier')" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors">
+            + Catat Transaksi Baru
+          </button>
+        </div>
+
+        <div class="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-center border-b border-slate-100 bg-slate-50/50">
+          <div>
+            <span class="text-[11px] font-medium text-slate-500 uppercase">Total Penjualan</span>
+            <div id="detail-total-sales" class="text-lg font-bold text-slate-800 mt-0.5">Rp 0</div>
+            <span id="detail-sales-split" class="text-[10px] text-slate-500">0 Tunai / 0 Bon</span>
+          </div>
+          <div>
+            <span class="text-[11px] font-medium text-amber-700 uppercase">Modal Barang (HPP)</span>
+            <div id="detail-total-hpp" class="text-lg font-bold text-amber-700 mt-0.5">Rp 0</div>
+            <span class="text-[10px] text-amber-700">Wajib untuk belanja ulang</span>
+          </div>
+          <div>
+            <span class="text-[11px] font-medium text-slate-500 uppercase">Laba Kotor</span>
+            <div id="detail-gross-profit" class="text-lg font-bold text-slate-800 mt-0.5">Rp 0</div>
+            <span id="detail-gross-margin" class="text-[10px] text-slate-500">Margin: 0%</span>
+          </div>
+          <div>
+            <span class="text-[11px] font-medium text-red-600 uppercase">Biaya Operasional</span>
+            <div id="detail-total-ops" class="text-lg font-bold text-red-600 mt-0.5">Rp 0</div>
+            <span class="text-[10px] text-slate-500">Plastik, listrik, bensin</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1 bg-emerald-100/60 p-2 rounded-xl">
+            <span class="text-[11px] font-bold text-emerald-800 uppercase">Laba Bersih Riil</span>
+            <div id="detail-net-profit" class="text-lg font-extrabold text-emerald-800 mt-0.5">Rp 0</div>
+            <span class="text-[10px] text-emerald-700 font-medium">Uang hasil jerih payah Anda</span>
+          </div>
+        </div>
+
+        <!-- Recent Transactions Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100/70 text-slate-600 uppercase font-semibold">
+              <tr>
+                <th class="py-2.5 px-4">Waktu</th>
+                <th class="py-2.5 px-4">Jenis Transaksi</th>
+                <th class="py-2.5 px-4">Keterangan / Barang</th>
+                <th class="py-2.5 px-4">Metode</th>
+                <th class="py-2.5 px-4 text-right">Nominal</th>
+                <th class="py-2.5 px-4 text-right">Laba / Beban</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-table-body" class="divide-y divide-slate-100 font-medium">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: CATAT CEPAT (KASIR & PENGELUARAN) ==================== -->
+    <section id="tab-cashier" class="hidden space-y-6">
+      
+      <!-- Quick Mode Toggle -->
+      <div class="flex flex-wrap gap-2 p-1 bg-slate-200/80 rounded-xl text-xs font-bold">
+        <button onclick="setCashierMode('sale')" id="btn-mode-sale" class="flex-1 py-2.5 px-4 rounded-lg bg-white shadow-sm text-emerald-700 transition-all flex items-center justify-center space-x-1.5">
+          <span>🛍️</span>
+          <span>Catat Penjualan (Kasir)</span>
+        </button>
+        <button onclick="setCashierMode('ops')" id="btn-mode-ops" class="flex-1 py-2.5 px-4 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center space-x-1.5">
+          <span>⚡</span>
+          <span>Biaya Operasional Toko</span>
+        </button>
+        <button onclick="setCashierMode('personal')" id="btn-mode-personal" class="flex-1 py-2.5 px-4 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center space-x-1.5">
+          <span>🏠</span>
+          <span>Ambil Uang Pribadi (Prive)</span>
+        </button>
+      </div>
+
+      <!-- Mode 1: Penjualan -->
+      <div id="panel-cashier-sale" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left 2 Cols: Daftar Produk Cepat Klik -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm">Pilih Barang yang Terjual</h3>
+              <p class="text-xs text-slate-500">Klik barang untuk memasukkannya ke struk penjualan</p>
+            </div>
+            <input type="text" id="quick-product-search" oninput="filterQuickProducts()" placeholder="Cari nama barang..." class="text-xs border border-slate-200 rounded-lg px-3 py-1.5 w-44 focus:outline-emerald-500">
+          </div>
+
+          <div id="quick-products-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Right Col: Struk & Keranjang Penjualan -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 class="font-bold text-slate-900 text-sm flex items-center space-x-1.5">
+                <span>🧾</span>
+                <span>Ringkasan Transaksi</span>
+              </h3>
+              <button onclick="clearCart()" class="text-xs text-red-500 hover:text-red-700 font-semibold">Kosongkan</button>
+            </div>
+
+            <!-- Cart Items -->
+            <div id="cart-items-container" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+              <p class="text-xs text-slate-400 text-center py-6">Belum ada barang dipilih. Klik barang di sebelah kiri.</p>
+            </div>
+
+            <!-- Customer & Payment Type -->
+            <div class="pt-3 border-t border-slate-100 space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nama Pembeli:</label>
+                <input type="text" id="cart-customer-name" value="Pembeli Langsung" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Metode Pembayaran:</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="flex items-center space-x-2 border border-slate-200 p-2 rounded-lg cursor-pointer hover:bg-slate-50">
+                    <input type="radio" name="paymentMethod" value="cash" checked onchange="toggleDebtDueDate(false)" class="text-emerald-600 focus:ring-emerald-500">
+                    <span class="font-bold text-slate-800">💵 Tunai</span>
+                  </label>
+                  <label class="flex items-center space-x-2 border border-slate-200 p-2 rounded-lg cursor-pointer hover:bg-slate-50">
+                    <input type="radio" name="paymentMethod" value="debt" onchange="toggleDebtDueDate(true)" class="text-amber-600 focus:ring-amber-500">
+                    <span class="font-bold text-amber-700">📒 Bon / Tempo</span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="cart-debt-due-wrapper" class="hidden">
+                <label class="block font-semibold text-slate-700 mb-1">Tanggal Janji Bayar (Jatuh Tempo):</label>
+                <input type="date" id="cart-due-date" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- Totals & Submit -->
+          <div class="pt-4 border-t border-slate-100 space-y-3">
+            <div class="space-y-1 text-xs">
+              <div class="flex justify-between text-slate-500">
+                <span>Modal Barang (HPP):</span>
+                <span id="cart-total-cost" class="font-semibold text-slate-700">Rp 0</span>
+              </div>
+              <div class="flex justify-between text-slate-500">
+                <span>Laba Kotor Transaksi Ini:</span>
+                <span id="cart-gross-profit" class="font-bold text-emerald-600">Rp 0</span>
+              </div>
+              <div class="flex justify-between text-base font-extrabold text-slate-900 pt-1 border-t border-slate-100">
+                <span>Total Bayar:</span>
+                <span id="cart-total-amount" class="text-emerald-700">Rp 0</span>
+              </div>
+            </div>
+
+            <button onclick="submitSaleTransaction()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center space-x-2">
+              <span>💾</span>
+              <span>Simpan Penjualan (Selesai)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode 2: Biaya Operasional Toko -->
+      <div id="panel-cashier-ops" class="hidden max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div class="border-b border-slate-100 pb-3">
+          <h3 class="font-bold text-slate-900 text-base">Catat Pengeluaran Operasional Toko</h3>
+          <p class="text-xs text-slate-500">Biaya yang diperlukan untuk menjalankan toko (mengurangi laba bersih)</p>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Keterangan Pengeluaran:</label>
+            <input type="text" id="ops-description" placeholder="Contoh: Beli kantong plastik 5 ikat, bensin kurir, token listrik" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:outline-emerald-500">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Kategori:</label>
+            <select id="ops-category" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:outline-emerald-500">
+              <option value="Plastik & Kemasan">Plastik & Kemasan</option>
+              <option value="Listrik & Air">Listrik & Air</option>
+              <option value="Transport & Bensin">Transport & Bensin Kulakan</option>
+              <option value="Kebersihan & Perlengkapan">Kebersihan & Perlengkapan</option>
+              <option value="Lain-lain">Lain-lain</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nominal (Rp):</label>
+            <input type="number" id="ops-amount" placeholder="0" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-base font-bold text-slate-800 focus:outline-emerald-500">
+          </div>
+        </div>
+
+        <button onclick="submitOpsExpense()" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-all flex items-center justify-center space-x-2">
+          <span>⚡</span>
+          <span>Simpan Biaya Operasional</span>
+        </button>
+      </div>
+
+      <!-- Mode 3: Ambil Uang Pribadi (Prive) -->
+      <div id="panel-cashier-personal" class="hidden max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div class="border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-2">
+            <h3 class="font-bold text-slate-900 text-base">Ambil Uang Pribadi (Prive)</h3>
+            <span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Keperluan Rumah</span>
+          </div>
+          <p class="text-xs text-slate-500">Pencatatan ini menjaga agar uang dapur tidak memakan modal belanja ulang</p>
+        </div>
+
+        <!-- Real-time Health Simulation for Personal Draw -->
+        <div id="personal-draw-advisor" class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+          <!-- Injected via JS -->
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Keperluan Pengambilan:</label>
+            <input type="text" id="personal-description" placeholder="Contoh: Uang belanja dapur rumah, SPP anak, uang saku" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:outline-emerald-500">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nominal yang Diambil (Rp):</label>
+            <input type="number" id="personal-amount" oninput="calculatePersonalDrawImpact()" placeholder="0" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-base font-bold text-purple-700 focus:outline-purple-500">
+          </div>
+        </div>
+
+        <button onclick="submitPersonalDraw()" class="w-full py-3 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl transition-all flex items-center justify-center space-x-2">
+          <span>🏠</span>
+          <span>Catat Pengambilan Pribadi</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: MANAJEMEN STOK PENCEGAH BONCOS ==================== -->
+    <section id="tab-inventory" class="hidden space-y-6">
+      
+      <!-- Top Metrics Bar -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">🏛️</div>
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Modal Tertahan di Toko</span>
+            <div id="inv-total-asset-value" class="text-lg font-extrabold text-slate-900">Rp 0</div>
+          </div>
+        </div>
+
+        <div class="bg-amber-50/70 rounded-2xl p-4 border border-amber-200 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl">⚠️</div>
+          <div>
+            <span class="text-[11px] font-bold text-amber-800 uppercase">Stok Kritis / Hampir Habis</span>
+            <div id="inv-critical-count" class="text-lg font-extrabold text-amber-900">0 Produk</div>
+          </div>
+        </div>
+
+        <div class="bg-slate-100 rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center text-xl">🐢</div>
+          <div>
+            <span class="text-[11px] font-bold text-slate-600 uppercase">Barang Lambat Laku (Slow)</span>
+            <div id="inv-slow-count" class="text-lg font-extrabold text-slate-800">0 Produk</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product List & Actions -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Daftar Persediaan & Rekomendasi Belanja Ulang</h3>
+            <p class="text-xs text-slate-500">Mencegah kehabisan stok barang laku dan mencegah modal mati di barang slow moving</p>
+          </div>
+          
+          <div class="flex items-center space-x-2">
+            <button onclick="openAddProductModal()" class="text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg flex items-center space-x-1 shadow-sm">
+              <span>+</span>
+              <span>Tambah Produk Baru</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="px-5 py-2.5 bg-slate-50 border-b border-slate-100 flex space-x-2 overflow-x-auto text-xs font-semibold">
+          <button onclick="filterInventory('all')" id="inv-filter-all" class="px-3 py-1 rounded-full bg-slate-800 text-white">Semua (<span id="count-all-prod">0</span>)</button>
+          <button onclick="filterInventory('critical')" id="inv-filter-critical" class="px-3 py-1 rounded-full bg-white text-amber-700 border border-slate-200 hover:bg-amber-50">⚠️ Kritis (<span id="count-crit-prod">0</span>)</button>
+          <button onclick="filterInventory('slow')" id="inv-filter-slow" class="px-3 py-1 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100">🐢 Lambat Laku (<span id="count-slow-prod">0</span>)</button>
+          <button onclick="filterInventory('safe')" id="inv-filter-safe" class="px-3 py-1 rounded-full bg-white text-emerald-700 border border-slate-200 hover:bg-emerald-50">✅ Aman (<span id="count-safe-prod">0</span>)</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100/70 text-slate-600 uppercase font-semibold">
+              <tr>
+                <th class="py-3 px-4">Nama Produk</th>
+                <th class="py-3 px-4">Kategori</th>
+                <th class="py-3 px-4 text-right">Harga Beli</th>
+                <th class="py-3 px-4 text-right">Harga Jual</th>
+                <th class="py-3 px-4 text-center">Stok</th>
+                <th class="py-3 px-4 text-center">Prediksi Habis</th>
+                <th class="py-3 px-4 text-right">Modal Tertahan</th>
+                <th class="py-3 px-4 text-center">Aksi Kulakan</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-table-body" class="divide-y divide-slate-100 font-medium">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: BUKU PIUTANG & PENAGIH WHATSAPP ==================== -->
+    <section id="tab-debts" class="hidden space-y-6">
+      
+      <!-- Top Debt Metrics -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl">📒</div>
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Total Piutang Belum Dibayar</span>
+            <div id="debt-total-receivable" class="text-xl font-extrabold text-red-600">Rp 0</div>
+          </div>
+        </div>
+
+        <div class="bg-amber-50/70 rounded-2xl p-4 border border-amber-200 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl">⏰</div>
+          <div>
+            <span class="text-[11px] font-bold text-amber-800 uppercase">Jatuh Tempo Hari Ini / Terlewat</span>
+            <div id="debt-urgent-count" class="text-xl font-extrabold text-amber-900">0 Tagihan</div>
+          </div>
+        </div>
+
+        <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-bold text-emerald-800 uppercase">Bantuan Tagih Sopan</span>
+            <p class="text-xs text-slate-600 mt-0.5">Draf pesan santun menjaga hubungan baik & silaturahmi</p>
+          </div>
+          <button onclick="openAddDebtModal()" class="text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg">
+            + Catat Bon Baru
+          </button>
+        </div>
+      </div>
+
+      <!-- Debt List -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Daftar Pelanggan yang Memiliki Bon / Piutang</h3>
+            <p class="text-xs text-slate-500">Klik tombol "Kirim WA Sopan" untuk membuat pesan pengingat ramah tanpa rasa canggung</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100/70 text-slate-600 uppercase font-semibold">
+              <tr>
+                <th class="py-3 px-4">Nama Pelanggan</th>
+                <th class="py-3 px-4">No. WhatsApp</th>
+                <th class="py-3 px-4">Catatan Belanja</th>
+                <th class="py-3 px-4 text-right">Nominal Piutang</th>
+                <th class="py-3 px-4 text-center">Jatuh Tempo</th>
+                <th class="py-3 px-4 text-center">Status</th>
+                <th class="py-3 px-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="debt-table-body" class="divide-y divide-slate-100 font-medium">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: KALKULATOR HARGA & MARGIN ==================== -->
+    <section id="tab-pricing" class="hidden space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Calculator Inputs -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Kalkulator Rekomendasi Harga Jual & Margin</h3>
+            <p class="text-xs text-slate-500">Jangan sekadar meniru harga pesaing. Hitung struktur biaya toko Anda agar tidak boncos.</p>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Harga Beli / Modal Kulakan per unit (Rp):</label>
+              <input type="number" id="calc-cost-price" value="80000" oninput="calculatePricingTiers()" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-base font-bold text-slate-800 focus:outline-emerald-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Biaya Kemasan / Unit (Rp):</label>
+                <input type="number" id="calc-pack-cost" value="2000" oninput="calculatePricingTiers()" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Biaya Ops/Bensin per Unit (Rp):</label>
+                <input type="number" id="calc-ops-cost" value="3000" oninput="calculatePricingTiers()" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+              </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+              <span class="font-bold text-slate-700">Total Modal Pokok (HPP Lengkap):</span>
+              <span id="calc-total-base-cost" class="font-extrabold text-base text-slate-900">Rp 85.000</span>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Target Margin Laba Bersih Eceran (% dari Harga Jual):</label>
+              <div class="flex items-center space-x-3">
+                <input type="range" id="calc-target-margin" min="5" max="50" value="20" oninput="updateMarginSlider(this.value)" class="flex-1 accent-emerald-600">
+                <span id="calc-margin-val" class="font-bold text-emerald-700 text-base w-12 text-right">20%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formula Education Alert -->
+          <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 space-y-1">
+            <div class="font-bold flex items-center space-x-1">
+              <span>💡</span>
+              <span>Rumus Margin Asli vs Salah Kaprah Markup</span>
+            </div>
+            <p class="leading-relaxed">
+              Banyak UMKM salah: modal Rp 85.000 + 20% = Rp 102.000. <strong>Itu markup, bukan margin!</strong><br>
+              Jika harga jual Rp 102.000, margin riil Anda hanya 16,6%.<br>
+              Rumus margin sebenarnya: <code class="bg-emerald-100 px-1 py-0.5 rounded font-mono font-bold">Harga = Modal ÷ (1 - Margin%)</code>
+            </p>
+          </div>
+        </div>
+
+        <!-- Output Tiers Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5 flex flex-col justify-between">
+          <div class="space-y-4">
+            <h3 class="font-bold text-slate-900 text-base">Skenario Harga yang Disarankan</h3>
+
+            <!-- Tier 1: Eceran -->
+            <div class="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/30 space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="text-base">🛒</span>
+                  <span class="font-bold text-slate-900 text-sm">Harga Eceran (Langsung ke Konsumen)</span>
+                </div>
+                <span id="tier-retail-margin" class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Margin 20%</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <div id="tier-retail-price" class="text-2xl font-extrabold text-emerald-800">Rp 106.250</div>
+                <span id="tier-retail-profit" class="text-xs font-semibold text-slate-600">Laba: Rp 21.250 / unit</span>
+              </div>
+            </div>
+
+            <!-- Tier 2: Grosir -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="text-base">📦</span>
+                  <span class="font-bold text-slate-800 text-sm">Harga Grosir (Minimal Beli 6-12 Unit)</span>
+                </div>
+                <span class="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Margin 12%</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <div id="tier-wholesale-price" class="text-xl font-bold text-slate-800">Rp 96.500</div>
+                <span id="tier-wholesale-profit" class="text-xs font-semibold text-slate-600">Laba: Rp 11.500 / unit</span>
+              </div>
+            </div>
+
+            <!-- Tier 3: Reseller -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="text-base">🤝</span>
+                  <span class="font-bold text-slate-800 text-sm">Harga Mitra / Reseller</span>
+                </div>
+                <span class="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">Margin 15%</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <div id="tier-reseller-price" class="text-xl font-bold text-slate-800">Rp 100.000</div>
+                <span id="tier-reseller-profit" class="text-xs font-semibold text-slate-600">Laba: Rp 15.000 / unit</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-slate-500 text-center">
+            Gunakan harga ini saat memasukkan produk ke daftar persediaan atau saat menawarkan harga ke pelanggan partai.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 6: ASISTEN TEMANUSAHA (AI COPILOT) ==================== -->
+    <section id="tab-assistant" class="hidden space-y-6">
+      
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[650px]">
+        
+        <!-- Chat Header -->
+        <div class="px-5 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl">
+              🤝
+            </div>
+            <div>
+              <h3 class="font-bold text-base leading-tight">Asisten TemanUsaha</h3>
+              <p class="text-xs text-emerald-100">Menjawab pertanyaan bisnis Anda berdasarkan angka riil toko saat ini</p>
+            </div>
+          </div>
+          <span class="text-[10px] bg-white/20 px-2 py-1 rounded-full font-semibold">Aktif • Membaca Data Toko</span>
+        </div>
+
+        <!-- Chat History Container -->
+        <div id="chat-messages-container" class="flex-1 p-4 sm:p-5 overflow-y-auto space-y-4 bg-slate-50">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Quick Question Chips -->
+        <div class="p-3 bg-white border-t border-slate-200 overflow-x-auto hide-scrollbar flex space-x-2 text-xs">
+          <button onclick="askQuickPrompt('Kenapa keuntungan saya hari ini terasa tipis?')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 border border-slate-200 transition-colors">
+            💬 Kenapa laba terasa tipis?
+          </button>
+          <button onclick="askQuickPrompt('Produk mana yang paling menyumbang untung?')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 border border-slate-200 transition-colors">
+            💬 Produk mana paling untung?
+          </button>
+          <button onclick="askQuickPrompt('Kalau saya punya modal Rp 5 juta, sebaiknya digunakan untuk apa?')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 border border-slate-200 transition-colors">
+            💬 Ada modal 5 juta buat apa?
+          </button>
+          <button onclick="askQuickPrompt('Apakah saya aman ambil uang Rp 250rb buat keperluan keluarga hari ini?')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 border border-slate-200 transition-colors">
+            💬 Boleh ambil uang pribadi hari ini?
+          </button>
+          <button onclick="askQuickPrompt('Apakah saya mampu menambah satu orang karyawan toko?')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 border border-slate-200 transition-colors">
+            💬 Mampu tambah karyawan?
+          </button>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <form onsubmit="handleChatSubmit(event)" class="p-3 bg-white border-t border-slate-200 flex items-center space-x-2">
+          <input type="text" id="chat-input" placeholder="Tanyakan kondisi usaha Anda (misal: stok mana yang harus saya kulakan duluan?)..." class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-emerald-500">
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1 shadow-md shadow-emerald-600/20">
+            <span>Kirim</span>
+            <span>➤</span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 7: IDE PROMOSI & PEMASARAN ==================== -->
+    <section id="tab-marketing" class="hidden space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Generator Controls -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Generator Promosi Otomatis</h3>
+            <p class="text-xs text-slate-500">Buat status WhatsApp atau caption Instagram untuk mencairkan produk menumpuk</p>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Pilih Produk yang Ingin Dipromosikan:</label>
+              <select id="promo-product-select" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:outline-emerald-500">
+                <!-- Injected via JS -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Gaya Bahasa Promosi:</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center space-x-2 border border-slate-200 p-2.5 rounded-lg cursor-pointer hover:bg-slate-50">
+                  <input type="radio" name="promoStyle" value="friendly" checked class="text-emerald-600 focus:ring-emerald-500">
+                  <div>
+                    <div class="font-bold text-slate-800">Santai & Akrab</div>
+                    <div class="text-[10px] text-slate-500">Cocok status WhatsApp tetangga</div>
+                  </div>
+                </label>
+                <label class="flex items-center space-x-2 border border-slate-200 p-2.5 rounded-lg cursor-pointer hover:bg-slate-50">
+                  <input type="radio" name="promoStyle" value="bundle" class="text-emerald-600 focus:ring-emerald-500">
+                  <div>
+                    <div class="font-bold text-slate-800">Paket Hemat / Diskon</div>
+                    <div class="text-[10px] text-slate-500">Cairkan barang menumpuk</div>
+                  </div>
+                </label>
+                <label class="flex items-center space-x-2 border border-slate-200 p-2.5 rounded-lg cursor-pointer hover:bg-slate-50">
+                  <input type="radio" name="promoStyle" value="story" class="text-emerald-600 focus:ring-emerald-500">
+                  <div>
+                    <div class="font-bold text-slate-800">Cerita / Edukasi</div>
+                    <div class="text-[10px] text-slate-500">Untuk IG / grup arisan</div>
+                  </div>
+                </label>
+                <label class="flex items-center space-x-2 border border-slate-200 p-2.5 rounded-lg cursor-pointer hover:bg-slate-50">
+                  <input type="radio" name="promoStyle" value="urgent" class="text-emerald-600 focus:ring-emerald-500">
+                  <div>
+                    <div class="font-bold text-slate-800">Stok Terbatas / Gercep</div>
+                    <div class="text-[10px] text-slate-500">Mendorong beli cepat</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <button onclick="generatePromoText()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2">
+              <span>✨</span>
+              <span>Buatkan Draf Promosi Sekarang</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Generated Text Preview -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-slate-900 text-base flex items-center space-x-1.5">
+                <span>📱</span>
+                <span>Draf Siap Kirim</span>
+              </h3>
+              <span id="promo-badge-style" class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Format Status WA</span>
+            </div>
+
+            <div class="relative">
+              <textarea id="promo-output-text" rows="9" class="w-full border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 leading-relaxed font-sans focus:outline-emerald-500 bg-slate-50"></textarea>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-3 border-t border-slate-100">
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="copyPromoText()" class="py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5">
+                <span>📋</span>
+                <span id="btn-copy-promo-label">Salin Teks</span>
+              </button>
+              <button onclick="sharePromoWhatsApp()" class="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5">
+                <span>💬</span>
+                <span>Buka Status WA</span>
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-500 text-center">Tips: Promosikan barang lambat laku dibarengi produk pokok agar pembeli tertarik.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal 1: Kirim WA Sopan untuk Piutang -->
+  <div id="modal-wa-reminder" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">💬</div>
+          <h3 class="font-bold text-slate-900 text-sm">Draf Pesan Pengingat Sopan</h3>
+        </div>
+        <button onclick="closeWaModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <p class="text-slate-500">Pesan ini dirancang santun agar silaturahmi tetap terjaga:</p>
+        <textarea id="modal-wa-text" rows="7" class="w-full border border-slate-200 rounded-xl p-3 text-xs leading-relaxed focus:outline-emerald-500 bg-slate-50"></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button onclick="copyModalWaText()" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs flex items-center justify-center space-x-1">
+          <span>📋</span>
+          <span id="btn-modal-copy-label">Salin Teks</span>
+        </button>
+        <button onclick="sendDirectWhatsApp()" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-1 shadow-md shadow-emerald-600/20">
+          <span>📲</span>
+          <span>Buka WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Tambah Produk Baru -->
+  <div id="modal-add-product" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-sm">Tambah Produk Baru</h3>
+        <button onclick="closeAddProductModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nama Produk:</label>
+          <input type="text" id="new-prod-name" placeholder="Misal: Kecap Manis 550ml" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Kategori:</label>
+            <input type="text" id="new-prod-cat" value="Sembako" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Satuan (kg, botol, dll):</label>
+            <input type="text" id="new-prod-unit" value="pcs" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Harga Beli / Modal (Rp):</label>
+            <input type="number" id="new-prod-cost" placeholder="0" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Harga Jual (Rp):</label>
+            <input type="number" id="new-prod-sell" placeholder="0" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Jumlah Stok Awal:</label>
+            <input type="number" id="new-prod-stock" value="10" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Batas Minimal Stok:</label>
+            <input type="number" id="new-prod-min" value="5" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+          </div>
+        </div>
+      </div>
+
+      <button onclick="submitNewProduct()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md">
+        Simpan Produk
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 3: Kulakan Tambah Stok -->
+  <div id="modal-restock" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-sm">Kulakan / Tambah Stok</h3>
+        <button onclick="closeRestockModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <span class="text-slate-500 block">Produk:</span>
+          <span id="restock-prod-name" class="font-bold text-slate-800 text-sm">Nama Produk</span>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Jumlah Barang Masuk:</label>
+          <input type="number" id="restock-qty" value="10" oninput="updateRestockTotal()" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-emerald-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Harga Beli per Unit (Rp):</label>
+          <input type="number" id="restock-unit-cost" oninput="updateRestockTotal()" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-emerald-500">
+        </div>
+        <div class="p-3 bg-amber-50 rounded-lg text-amber-900 border border-amber-200 flex justify-between items-center">
+          <span>Total Biaya Kulakan:</span>
+          <span id="restock-total-cost" class="font-bold text-sm">Rp 0</span>
+        </div>
+      </div>
+
+      <button onclick="submitRestock()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md">
+        Simpan Stok & Potong Kas
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 4: Tambah Bon Piutang Baru -->
+  <div id="modal-add-debt" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-sm">Catat Bon Pelanggan Baru</h3>
+        <button onclick="closeAddDebtModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nama Pelanggan:</label>
+          <input type="text" id="new-debt-name" placeholder="Contoh: Bu Darmi (Penjahit)" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">No. WhatsApp (Awalan 08 / 62):</label>
+          <input type="text" id="new-debt-phone" placeholder="Contoh: 08123456789" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nominal Utang (Rp):</label>
+          <input type="number" id="new-debt-amount" placeholder="0" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-red-600 focus:outline-red-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Catatan Barang yang Diberikan:</label>
+          <input type="text" id="new-debt-notes" placeholder="Contoh: Minyak 2 pouch + beras 5kg" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Tanggal Janji Bayar (Jatuh Tempo):</label>
+          <input type="date" id="new-debt-due" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-emerald-500">
+        </div>
+      </div>
+
+      <button onclick="submitNewDebt()" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-md">
+        Simpan Catatan Piutang
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="./src/firebase.js"></script>
+  <!-- Embedded Application Logic -->
+  <script src="./src/app.js"></script>
+</body>
+</html>
