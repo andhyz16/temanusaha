@@ -608,16 +608,7 @@ function showPublicLandingPage() {
  * Menutup landing page dan membuka form registrasi.
  */
 function closeLandingAndRegister() {
-  const landing = document.getElementById('public-landing-page');
-  if (landing) landing.remove();
-  
-  const appMain = document.getElementById('main-app-shell');
-  if (appMain) appMain.style.display = '';
-  const header = document.getElementById('main-header');
-  if (header) header.style.display = '';
-  const sideMenu = document.getElementById('side-menu-container');
-  if (sideMenu) sideMenu.style.display = '';
-  
+  // JANGAN hapus landing page — biarkan tetap di belakang auth modal
   openAuthModal();
   setTimeout(() => switchAuthMode('register'), 50);
 }
@@ -626,16 +617,7 @@ function closeLandingAndRegister() {
  * Menutup landing page dan membuka form login.
  */
 function closeLandingAndLogin() {
-  const landing = document.getElementById('public-landing-page');
-  if (landing) landing.remove();
-  
-  const appMain = document.getElementById('main-app-shell');
-  if (appMain) appMain.style.display = '';
-  const header = document.getElementById('main-header');
-  if (header) header.style.display = '';
-  const sideMenu = document.getElementById('side-menu-container');
-  if (sideMenu) sideMenu.style.display = '';
-  
+  // JANGAN hapus landing page — biarkan tetap di belakang auth modal
   openAuthModal();
   setTimeout(() => switchAuthMode('login'), 50);
 }
@@ -2393,6 +2375,34 @@ function closeAuthModal() {
   const modal = document.getElementById('auth-portal-modal');
   if (!modal) return;
   modal.classList.add('hidden');
+  
+  // Jika landing page masih tampil dan user sudah login, hapus landing page & restore app
+  if (state.currentUser) {
+    removeLandingPageAndRestoreApp();
+  }
+}
+
+/**
+ * Menghapus landing/store page overlay dan menampilkan kembali app shell utama.
+ */
+function removeLandingPageAndRestoreApp() {
+  const landing = document.getElementById('public-landing-page');
+  if (landing) landing.remove();
+  
+  const storePage = document.getElementById('store-public-page');
+  if (storePage) storePage.remove();
+  
+  const notFoundPage = document.getElementById('store-not-found-page');
+  if (notFoundPage) notFoundPage.remove();
+  
+  const appMain = document.getElementById('main-app-shell');
+  if (appMain) appMain.style.display = '';
+  
+  const header = document.getElementById('main-header');
+  if (header) header.style.display = '';
+  
+  const sideMenu = document.getElementById('side-menu-container');
+  if (sideMenu) sideMenu.style.display = '';
 }
 
 function switchAuthMode(mode) {
