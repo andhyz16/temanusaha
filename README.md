@@ -32,10 +32,10 @@ Aplikasi ini dibuat **super ringan, tanpa perlu install library yang berat**, da
 
 | Fitur | Kebutuhan Riil UMKM | Solusi di TemanUsaha |
 | :--- | :--- | :--- |
-| **1. Laporan Kondisi 1 Halaman** | Pedagang tidak punya waktu membuka banyak menu. | Health check harian: Kas di tangan, modal kulakan terkunci, sisa laba dingin, 3 peringatan mendesak pagi hari. |
-| **2. Pemisah Uang Usaha vs Pribadi** | Seringkali dagangan ramai tapi modal belanja habis terpakai keperluan rumah. | Sistem otomatis memisahkan **HPP (Modal Belanja Ulang)** dari **Laba Bersih**. Jika uang pribadi yang diambil melebihi laba, sistem memberi sinyal bahaya: *"Modal kulakan tergerus!"*. |
+| **1. Laporan Kondisi 1 Halaman** | Pedagang tidak punya waktu membuka banyak menu. | Health check harian: Kas di tangan, modal belanja barang terkunci, sisa laba dingin, 3 peringatan mendesak pagi hari. |
+| **2. Pemisah Uang Usaha vs Pribadi** | Seringkali dagangan ramai tapi modal belanja habis terpakai keperluan rumah. | Sistem otomatis memisahkan **HPP (Modal Belanja Ulang)** dari **Laba Bersih**. Jika uang pribadi yang diambil melebihi laba, sistem memberi sinyal bahaya: *"Modal belanja barang tergerus!"*. |
 | **3. Kasir & Pencatatan Cepat** | Butuh catat transaksi dalam hitungan detik di HP. | Pilih barang dengan 1 klik, hitung HPP otomatis, dukung pembayaran Tunai maupun Bon Tempo. |
-| **4. Stok Pencegah Kerugian** | Mencegah kehabisan barang laku dan mencegah uang mati di barang menumpuk. | Indikator estimasi hari habis, deteksi barang *slow-moving*, dan tombol cepat *"Kulakan"* yang otomatis memotong kas toko. |
+| **4. Stok Pencegah Kerugian** | Mencegah kehabisan barang laku dan mencegah uang mati di barang menumpuk. | Indikator estimasi hari habis, deteksi barang *slow-moving*, dan tombol cepat *"Belanja Barang"* yang otomatis memotong kas toko. |
 | **5. Buku Piutang & Tagih WA Sopan** | Menjaga silaturahmi pelanggan namun tetap tertib menagih. | Daftar jatuh tempo bon + tombol *"Kirim WA Sopan"* yang otomatis menyusun pesan santun dan membuka WhatsApp dalam 1 klik. |
 | **6. Kalkulator Harga & Margin** | Banyak UMKM salah hitung margin karena hanya menambah markup ke modal. | Menghitung harga jual berdasarkan HPP lengkap + target margin laba bersih. Memberikan 3 tier harga: Eceran, Grosir, Reseller. |
 | **7. Asisten TemanUsaha (AI Bisnis)** | Butuh teman diskusi tanpa istilah akuntansi rumit. | Tanya jawab berbasis angka riil: *"Kenapa laba terasa tipis?"*, *"Produk mana paling untung?"*, *"Aman ambil uang pribadi?"*, *"Mampu tambah karyawan?"*. |
