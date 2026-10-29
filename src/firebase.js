@@ -10,6 +10,7 @@ const firebaseConfig = {
 };
 
 let db = null;
+let auth = null;
 let isFirebaseReady = false;
 
 function initFirebase() {
@@ -19,6 +20,7 @@ function initFirebase() {
         firebase.initializeApp(firebaseConfig);
       }
       db = firebase.firestore();
+      auth = firebase.auth();
 
       // Aktifkan Offline Persistence agar tetap bisa dipakai saat internet mati
       db.enablePersistence({ synchronizeTabs: true }).catch((err) => {

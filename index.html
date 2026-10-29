@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TemanUsaha - Sahabat Bisnis UMKM Indonesia</title>
+  <title>TemanUsaha - Sahabat Bisnis & Kasir Pintar UMKM Indonesia</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Font Plus Jakarta Sans -->
@@ -47,7 +47,7 @@
     }
   </style>
 
-  <!-- Inline Core Navigation Helpers (100% Reliable Toggle) -->
+  <!-- Inline Core Navigation & UI Helpers -->
   <script>
     function toggleSideMenu() {
       const container = document.getElementById('side-menu-container');
@@ -79,6 +79,23 @@
         switchTab(tabId);
       }
     }
+
+    // Toggle Eye Icon Password Visibility
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!input || !icon) return;
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerText = '🙈';
+        icon.title = 'Sembunyikan password';
+      } else {
+        input.type = 'password';
+        icon.innerText = '👁️';
+        icon.title = 'Lihat password';
+      }
+    }
   </script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
@@ -95,12 +112,12 @@
       <div class="p-5 border-b border-slate-100 bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 text-white shrink-0">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center space-x-2.5">
-            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center font-extrabold text-xl shadow-inner">
-              TU
+            <div id="drawer-store-logo" class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center font-extrabold text-2xl shadow-inner">
+              🏪
             </div>
             <div>
-              <h2 class="font-extrabold text-base leading-tight">TemanUsaha</h2>
-              <span class="text-[10px] text-emerald-200 font-medium">Sahabat Bisnis UMKM Indonesia</span>
+              <h2 id="drawer-store-name" class="font-extrabold text-base leading-tight">TemanUsaha</h2>
+              <span id="drawer-business-type" class="text-[10px] text-emerald-200 font-medium">Sahabat Bisnis UMKM Indonesia</span>
             </div>
           </div>
           <button onclick="closeSideMenu()" title="Tutup Menu" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
@@ -113,11 +130,11 @@
         <!-- Store Info Pill -->
         <div class="bg-white/10 backdrop-blur rounded-xl p-2.5 border border-white/10 text-xs flex items-center justify-between">
           <div>
-            <div class="font-bold text-white leading-tight">Toko Berkah Barokah</div>
-            <div class="text-[10px] text-emerald-200">Sembako & Kebutuhan Harian</div>
+            <div class="text-[10px] text-emerald-200">Status Sewa:</div>
+            <div id="drawer-sub-status" class="font-bold text-amber-300 text-[11px]">Trial 30 Hari Aktif</div>
           </div>
           <div class="text-right">
-            <div class="text-[9px] uppercase tracking-wider text-emerald-200">Kas Laci</div>
+            <div class="text-[9px] uppercase tracking-wider text-emerald-200">Kas di Laci</div>
             <div id="drawer-cash-in-hand" class="font-extrabold text-white text-xs">Rp 0</div>
           </div>
         </div>
@@ -218,6 +235,32 @@
           </div>
           <span class="text-slate-400 group-hover:text-emerald-600">›</span>
         </button>
+
+        <div class="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-slate-400 font-bold">Akun & Langganan</div>
+
+        <!-- Menu 8: Perpanjang Sewa / Langganan -->
+        <button onclick="selectMenu('subscription')" id="drawer-btn-subscription" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-amber-50 text-slate-700">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">💳</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-amber-800">Perpanjang Sewa Aplikasi</div>
+              <div class="text-[10px] text-slate-500 font-normal">Mulai Rp 20.000 / bulan</div>
+            </div>
+          </div>
+          <span id="drawer-badge-sub" class="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full font-bold">Trial</span>
+        </button>
+
+        <!-- Menu 9: Pengaturan Toko -->
+        <button onclick="selectMenu('settings')" id="drawer-btn-settings" class="w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">⚙️</span>
+            <div>
+              <div class="font-bold text-slate-900 group-hover:text-emerald-700">Pengaturan Toko & Akun</div>
+              <div class="text-[10px] text-slate-500 font-normal">Atur logo, ubah sandi & profil</div>
+            </div>
+          </div>
+          <span class="text-slate-400 group-hover:text-emerald-600">›</span>
+        </button>
       </nav>
 
       <!-- Drawer Footer -->
@@ -227,7 +270,7 @@
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="text-[11px] font-semibold text-slate-700">Firebase Cloud Aktif</span>
           </div>
-          <span class="text-[10px] text-slate-400">v1.2 PWA</span>
+          <span id="drawer-user-phone" class="text-[10px] text-slate-500 font-mono">Akun Aktif</span>
         </div>
 
         <div class="grid grid-cols-2 gap-2 pt-1">
@@ -235,10 +278,10 @@
             <span>🔄</span>
             <span>Reset Demo</span>
           </button>
-          <a href="https://github.com/andhyz16/temanusaha" target="_blank" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-center font-semibold text-[11px] flex items-center justify-center space-x-1">
-            <span>🐙</span>
-            <span>GitHub</span>
-          </a>
+          <button onclick="openAuthModal()" class="py-2 px-3 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-center font-semibold text-[11px] flex items-center justify-center space-x-1">
+            <span>👤</span>
+            <span>Daftar / Akun</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -255,8 +298,8 @@
           </svg>
         </button>
 
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 font-extrabold text-lg sm:text-xl shrink-0 cursor-pointer" onclick="toggleSideMenu()">
-          TU
+        <div id="header-store-logo" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 font-extrabold text-xl shrink-0 cursor-pointer" onclick="toggleSideMenu()">
+          🏪
         </div>
         <div>
           <div class="flex items-center space-x-2">
@@ -267,27 +310,33 @@
               <span class="text-[9px] text-emerald-600">▾</span>
             </button>
           </div>
-          <p id="store-title" class="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[170px] sm:max-w-none">Toko Berkah Barokah • Sembako & Harian</p>
+          <p id="store-title" class="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[160px] sm:max-w-none">Toko Berkah Barokah • Sembako & Harian</p>
         </div>
       </div>
 
       <div class="flex items-center space-x-2">
+        <!-- Subscription Status Badge -->
+        <button onclick="selectMenu('subscription')" id="header-subscription-badge" title="Klik untuk lihat masa aktif & paket sewa" class="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold transition-all shadow-sm">
+          <span>⭐</span>
+          <span id="header-subscription-text">Trial 30 Hari</span>
+        </button>
+
         <!-- Firebase Cloud Status Badge -->
-        <div id="cloud-status-badge" class="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold">
+        <div id="cloud-status-badge" class="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold">
           <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span id="cloud-status-text">Firebase Cloud</span>
         </div>
+
         <!-- Quick Cash Pill -->
         <div class="hidden sm:flex flex-col items-end px-3 py-1 bg-slate-100 rounded-lg border border-slate-200">
           <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Uang Kas di Laci</span>
           <span id="header-cash-in-hand" class="text-xs font-bold text-emerald-700">Rp 0</span>
         </div>
-        <!-- Reset Data Button -->
-        <button onclick="confirmResetData()" title="Reset ke data contoh toko" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-medium flex items-center space-x-1 border border-slate-200">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span class="hidden md:inline">Reset Demo</span>
+
+        <!-- Login / Register Portal Button -->
+        <button onclick="openAuthModal()" title="Daftar Akun Baru / Masuk Toko" class="p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center space-x-1 border border-slate-200">
+          <span>👤</span>
+          <span class="hidden md:inline" id="header-user-btn-label">Daftar / Masuk</span>
         </button>
       </div>
     </div>
@@ -319,11 +368,11 @@
           </div>
         </div>
 
-        <!-- Card 2: Modal Belanja Ulang (TERKUNCI) -->
+        <!-- Card 2: Modal Belanja Barang (TERKUNCI) -->
         <div class="bg-amber-50/50 rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm flex flex-col justify-between">
           <div class="flex items-center justify-between text-amber-700 mb-2">
             <div class="flex items-center space-x-1">
-              <span class="text-xs font-bold uppercase tracking-wider">🔒 Modal Belanja Ulang</span>
+              <span class="text-xs font-bold uppercase tracking-wider">🔒 Modal Belanja Barang</span>
             </div>
             <span class="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">JANGAN DIAMBIL</span>
           </div>
@@ -390,7 +439,7 @@
           <div>
             <span class="text-[11px] font-medium text-amber-700 uppercase">Modal Barang (HPP)</span>
             <div id="detail-total-hpp" class="text-lg font-bold text-amber-700 mt-0.5">Rp 0</div>
-            <span class="text-[10px] text-amber-700">Wajib untuk belanja ulang</span>
+            <span class="text-[10px] text-amber-700">Wajib untuk belanja barang</span>
           </div>
           <div>
             <span class="text-[11px] font-medium text-slate-500 uppercase">Laba Kotor</span>
@@ -579,7 +628,7 @@
             <h3 class="font-bold text-slate-900 text-base">Ambil Uang Pribadi (Prive)</h3>
             <span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Keperluan Rumah</span>
           </div>
-          <p class="text-xs text-slate-500">Pencatatan ini menjaga agar uang dapur tidak memakan modal belanja ulang</p>
+          <p class="text-xs text-slate-500">Pencatatan ini menjaga agar uang dapur tidak memakan modal belanja barang</p>
         </div>
 
         <!-- Real-time Health Simulation for Personal Draw -->
@@ -640,7 +689,7 @@
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 class="font-bold text-slate-900 text-base">Daftar Persediaan & Rekomendasi Belanja Ulang</h3>
+            <h3 class="font-bold text-slate-900 text-base">Daftar Persediaan & Rekomendasi Belanja Barang</h3>
             <p class="text-xs text-slate-500">Mencegah kehabisan stok barang laku dan mencegah modal mati di barang slow moving</p>
           </div>
           
@@ -1007,6 +1056,323 @@
       </div>
     </section>
 
+    <!-- ==================== TAB 8: PERPANJANG SEWA & LANGGANAN ==================== -->
+    <section id="tab-subscription" class="hidden space-y-6">
+      
+      <!-- Top Subscription Status Card -->
+      <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold">
+              <span>⭐</span>
+              <span id="sub-card-badge">Masa Uji Coba Gratis (Free 1 Bulan)</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Status Sewa Toko Anda</h2>
+            <p id="sub-card-desc" class="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+              Toko Anda saat ini aktif dalam masa uji coba gratis 30 hari. Perpanjang sewa sebelum masa aktif berakhir agar pencatatan kasir, stok, dan piutang tetap berjalan lancar.
+            </p>
+          </div>
+
+          <div class="bg-white/10 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/15 text-center shrink-0 min-w-[200px]">
+            <span class="text-[11px] uppercase tracking-wider text-slate-300 font-semibold block">Sisa Masa Aktif</span>
+            <div id="sub-remaining-days" class="text-3xl sm:text-4xl font-extrabold text-amber-300 my-1">30 Hari</div>
+            <span id="sub-expiry-date" class="text-[11px] text-slate-300">Aktif sampai 28 Nov 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Plans Header -->
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">Paket Sewa Terjangkau</span>
+        <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900">Pilih Paket Perpanjangan Sewa Aplikasi</h3>
+        <p class="text-xs sm:text-sm text-slate-600">Biaya sangat murah dan bersahabat untuk UMKM, setara harga sebungkus rokok per bulan untuk mengelola toko Anda secara profesional.</p>
+      </div>
+
+      <!-- 3 Subscription Tier Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Paket 1: Standar (1 Bulan) -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Paket Standar</span>
+              <span class="text-[11px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">1 Bulan</span>
+            </div>
+            <div>
+              <div class="text-3xl font-extrabold text-slate-900">Rp 30.000</div>
+              <span class="text-xs text-slate-500">per bulan (bayar bulanan)</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">Cocok untuk mencoba berlangganan rutin tanpa komitmen panjang.</p>
+            
+            <ul class="space-y-2.5 text-xs text-slate-700 pt-2 border-t border-slate-100">
+              <li class="flex items-center space-x-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Pencatatan kasir & laba riil tanpa batas</span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Manajemen stok & belanja barang</span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Buku piutang & tombol kirim WA sopan</span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Sinkronisasi data awan (Cloud Firebase)</span>
+              </li>
+            </ul>
+          </div>
+
+          <button onclick="openPaymentModal('1_month', 'Paket Standar (1 Bulan)', 30000)" class="w-full mt-6 py-3 rounded-xl border-2 border-slate-800 text-slate-800 hover:bg-slate-900 hover:text-white font-bold text-xs transition-colors shadow-sm">
+            Pilih Paket 1 Bulan
+          </button>
+        </div>
+
+        <!-- Paket 2: Hemat / Populer (6 Bulan) -->
+        <div class="bg-white rounded-3xl border-2 border-emerald-500 shadow-lg p-6 flex flex-col justify-between relative ring-4 ring-emerald-500/10">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white font-extrabold text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">
+            ⭐ Paling Populer (Hemat 30rb)
+          </div>
+
+          <div class="space-y-4 pt-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Paket Hemat</span>
+              <span class="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">6 Bulan</span>
+            </div>
+            <div>
+              <div class="text-3xl font-extrabold text-emerald-800">Rp 25.000<span class="text-sm font-normal text-slate-500"> /bln</span></div>
+              <span class="text-xs font-semibold text-slate-600">Total: <strong>Rp 150.000</strong> (untuk 6 bulan)</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">Pilihan tepat pemilik warung & toko yang ingin tenang selama setengah tahun.</p>
+            
+            <ul class="space-y-2.5 text-xs text-slate-700 pt-2 border-t border-slate-100">
+              <li class="flex items-center space-x-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span><strong>Semua fitur Paket Standar</strong></span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Hemat Rp 30.000 dibanding bayar bulanan</span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Konsultasi Asisten TemanUsaha AI penuh</span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Generator promosi & status WhatsApp</span>
+              </li>
+            </ul>
+          </div>
+
+          <button onclick="openPaymentModal('6_months', 'Paket Hemat (6 Bulan)', 150000)" class="w-full mt-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-md shadow-emerald-600/20">
+            Pilih Paket 6 Bulan
+          </button>
+        </div>
+
+        <!-- Paket 3: Eksklusif (12 Bulan) -->
+        <div class="bg-gradient-to-b from-amber-50/70 to-white rounded-3xl border-2 border-amber-300 shadow-md p-6 flex flex-col justify-between relative">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-white font-extrabold text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">
+            👑 Paling Untung (Hemat 120rb)
+          </div>
+
+          <div class="space-y-4 pt-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-900 uppercase tracking-wider">Paket Eksklusif</span>
+              <span class="text-[11px] font-bold bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full">1 Tahun Penuh</span>
+            </div>
+            <div>
+              <div class="text-3xl font-extrabold text-amber-900">Rp 20.000<span class="text-sm font-normal text-slate-500"> /bln</span></div>
+              <span class="text-xs font-semibold text-slate-600">Total: <strong>Rp 240.000</strong> (untuk 1 tahun)</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">Paling murah dan hemat! Setara hanya Rp 660 per hari untuk kemudahan usaha Anda.</p>
+            
+            <ul class="space-y-2.5 text-xs text-slate-700 pt-2 border-t border-slate-100">
+              <li class="flex items-center space-x-2">
+                <span class="text-amber-600 font-bold">✓</span>
+                <span><strong>Semua fitur lengkap tanpa batasan</strong></span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-amber-600 font-bold">✓</span>
+                <span><strong>Hemat Rp 120.000</strong> (Setara 4 bulan gratis!)</span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-amber-600 font-bold">✓</span>
+                <span>Prioritas bantuan & update fitur terbaru</span>
+              </li>
+              <li class="flex items-center space-x-2">
+                <span class="text-amber-600 font-bold">✓</span>
+                <span>Cadangan data otomatis multi-perangkat</span>
+              </li>
+            </ul>
+          </div>
+
+          <button onclick="openPaymentModal('12_months', 'Paket Eksklusif (12 Bulan)', 240000)" class="w-full mt-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition-colors shadow-md shadow-amber-500/20">
+            Pilih Paket 1 Tahun
+          </button>
+        </div>
+
+      </div>
+
+      <!-- FAQ & Support note -->
+      <div class="p-5 bg-slate-100 rounded-2xl border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <span class="text-2xl">💬</span>
+          <p>Butuh bantuan perpanjangan sewa atau ingin bayar via QRIS/Transfer Bank? Admin siap membantu Anda lewat WhatsApp.</p>
+        </div>
+        <button onclick="contactAdminWhatsApp('Bantuan Pembayaran Sewa')" class="whitespace-nowrap px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs shadow-sm">
+          Hubungi Admin via WA
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 9: PENGATURAN TOKO & AKUN ==================== -->
+    <section id="tab-settings" class="hidden space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Col: Profil Toko & Logo -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-5">
+          <div class="border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900 text-base">Identitas & Logo Toko</h3>
+            <p class="text-xs text-slate-500">Sesuaikan logo dan nama yang tampil di aplikasi dan struk</p>
+          </div>
+
+          <!-- Logo Picker -->
+          <div class="space-y-3">
+            <label class="block text-xs font-semibold text-slate-700">Pilih Logo / Ikon Toko:</label>
+            <div class="flex items-center space-x-3">
+              <div id="settings-logo-preview" class="w-16 h-16 rounded-2xl bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-3xl shadow-inner">
+                🏪
+              </div>
+              <div class="flex-1">
+                <span class="text-[11px] text-slate-500 block mb-1">Klik ikon di bawah untuk mengganti:</span>
+                <div class="flex flex-wrap gap-1.5" id="logo-options-container">
+                  <button type="button" onclick="selectStoreLogo('🏪')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">🏪</button>
+                  <button type="button" onclick="selectStoreLogo('🛒')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">🛒</button>
+                  <button type="button" onclick="selectStoreLogo('🍜')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">🍜</button>
+                  <button type="button" onclick="selectStoreLogo('👕')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">👕</button>
+                  <button type="button" onclick="selectStoreLogo('📱')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">📱</button>
+                  <button type="button" onclick="selectStoreLogo('☕')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">☕</button>
+                  <button type="button" onclick="selectStoreLogo('🥖')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">🥖</button>
+                  <button type="button" onclick="selectStoreLogo('🥩')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">🥩</button>
+                  <button type="button" onclick="selectStoreLogo('🏗️')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">🏗️</button>
+                  <button type="button" onclick="selectStoreLogo('💊')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 text-base flex items-center justify-center">💊</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Store Inputs -->
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Nama Toko:</label>
+              <input type="text" id="settings-store-name" value="Toko Berkah Barokah" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-emerald-500 font-bold">
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Jenis Usaha:</label>
+              <select id="settings-business-type" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-emerald-500">
+                <option value="Sembako & Kebutuhan Harian">Sembako & Kebutuhan Harian</option>
+                <option value="Warung Makan & Kuliner">Warung Makan & Kuliner</option>
+                <option value="Toko Pakaian & Fashion">Toko Pakaian & Fashion</option>
+                <option value="Konter Pulsa & Aksesoris HP">Konter Pulsa & Aksesoris HP</option>
+                <option value="Toko Bangunan & Perkakas">Toko Bangunan & Perkakas</option>
+                <option value="Bengkel & Sparepart">Bengkel & Sparepart</option>
+                <option value="Reseller & Toko Online">Reseller & Toko Online</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Nomor WhatsApp Toko:</label>
+              <input type="text" id="settings-store-phone" value="08123456789" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-emerald-500 font-mono">
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Alamat Toko:</label>
+              <textarea id="settings-store-address" rows="2" placeholder="Alamat toko atau pasar..." class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-emerald-500">Pasar Induk Blok A No. 12</textarea>
+            </div>
+          </div>
+
+          <button onclick="saveStoreProfileSettings()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm">
+            Simpan Profil Toko
+          </button>
+        </div>
+
+        <!-- Right 2 Cols: Akun, Keamanan & Ubah Password -->
+        <div class="lg:col-span-2 space-y-6">
+          
+          <!-- Box Keamanan & Ubah Password -->
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+              <h3 class="font-bold text-slate-900 text-base">Keamanan Akun & Ubah Password</h3>
+              <p class="text-xs text-slate-500">Amankan pembukuan toko Anda agar tidak dibuka orang sembarangan</p>
+            </div>
+
+            <div class="space-y-3 text-xs max-w-md">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Email Terdaftar:</label>
+                <input type="email" id="settings-account-email" disabled value="pemilik@toko.com" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-mono">
+              </div>
+
+              <!-- Password Baru -->
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Password Baru:</label>
+                <div class="relative">
+                  <input type="password" id="settings-new-pass" placeholder="Minimal 6 karakter..." class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-emerald-500 pr-10">
+                  <button type="button" onclick="togglePasswordVisibility('settings-new-pass', 'eye-icon-new-pass')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                    <span id="eye-icon-new-pass">👁️</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Konfirmasi Password Baru -->
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Konfirmasi Password Baru:</label>
+                <div class="relative">
+                  <input type="password" id="settings-confirm-pass" placeholder="Ulangi password baru..." class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-emerald-500 pr-10">
+                  <button type="button" onclick="togglePasswordVisibility('settings-confirm-pass', 'eye-icon-confirm-pass')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                    <span id="eye-icon-confirm-pass">👁️</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="handleChangePassword()" class="py-2.5 px-5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition-colors shadow-sm">
+              Perbarui Password
+            </button>
+          </div>
+
+          <!-- Box Manajemen Data & Logout -->
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+              <h3 class="font-bold text-slate-900 text-base">Keluar & Ganti Toko</h3>
+              <p class="text-xs text-slate-500">Keluar dari akun toko saat ini untuk login ke toko lain</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div class="font-bold text-xs text-slate-800">Selesai Berjualan Hari Ini?</div>
+                <div class="text-[11px] text-slate-500">Semua data transaksi sudah tersimpan aman di Firebase Cloud.</div>
+              </div>
+
+              <button onclick="handleLogout()" class="px-5 py-2.5 rounded-xl border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs transition-colors shadow-sm flex items-center space-x-1.5">
+                <span>🚪</span>
+                <span>Keluar dari Akun Ini</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
   </main>
 
   <!-- ==================== MODALS ==================== -->
@@ -1161,9 +1527,198 @@
     </div>
   </div>
 
+  <!-- Modal 5: Perpanjang Sewa / Pembayaran Modal -->
+  <div id="modal-payment" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Perpanjangan Sewa</span>
+          <h3 id="pay-modal-title" class="font-extrabold text-slate-900 text-base mt-1">Paket Sewa Toko</h3>
+        </div>
+        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500">Total Biaya:</span>
+          <span id="pay-modal-amount" class="text-xl font-extrabold text-emerald-800">Rp 150.000</span>
+        </div>
+        <div class="text-[11px] text-slate-500">Masa aktif bertambah sesuai paket yang dipilih.</div>
+      </div>
+
+      <!-- Payment Transfer Info -->
+      <div class="space-y-3 text-xs">
+        <span class="font-bold text-slate-800 block">Metode Pembayaran Transfer / QRIS:</span>
+        
+        <div class="p-3 rounded-xl border border-slate-200 space-y-2 bg-white">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span>Bank BCA / Mandiri / BRI / DANA</span>
+            <span class="text-emerald-700">Online 24 Jam</span>
+          </div>
+          <div class="font-mono text-sm bg-slate-100 p-2 rounded-lg font-bold text-slate-900 flex justify-between items-center">
+            <span id="pay-account-number">123-456-7890</span>
+            <button onclick="copyPaymentNumber()" class="text-xs text-emerald-700 font-sans hover:underline">Salin Rekening</button>
+          </div>
+          <div class="text-[11px] text-slate-500">Atas Nama: <strong class="text-slate-800">Admin TemanUsaha</strong></div>
+        </div>
+      </div>
+
+      <!-- WhatsApp Confirmation Button -->
+      <div class="space-y-2 pt-2 border-t border-slate-100">
+        <button onclick="confirmPaymentWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
+          <span>📲</span>
+          <span>Konfirmasi Pembayaran via WhatsApp</span>
+        </button>
+        <p class="text-[10px] text-slate-400 text-center">Setelah transfer, kirimkan bukti transfer lewat WA untuk aktivasi instan.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 6: PORTAL PENDAFTARAN & LOGIN AKUN ==================== -->
+  <div id="auth-portal-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-extrabold text-xl shadow-md shadow-emerald-500/20">
+            TU
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-lg leading-tight">Akun Toko TemanUsaha</h3>
+            <p class="text-xs text-slate-500">1 Akun untuk 1 Toko • Data aman tersinkron di Cloud</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <!-- Auth Mode Switcher Tabs -->
+      <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl text-xs font-bold">
+        <button type="button" onclick="switchAuthMode('register')" id="auth-tab-reg" class="py-2.5 rounded-lg bg-white text-emerald-800 shadow-sm transition-all flex items-center justify-center space-x-1.5">
+          <span>✨</span>
+          <span>Daftar Toko Baru (Free 30 Hari)</span>
+        </button>
+        <button type="button" onclick="switchAuthMode('login')" id="auth-tab-login" class="py-2.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center space-x-1.5">
+          <span>🔑</span>
+          <span>Masuk Toko</span>
+        </button>
+      </div>
+
+      <!-- FORM 1: PENDAFTARAN AKUN BARU -->
+      <form id="form-register-store" onsubmit="handleRegisterSubmit(event)" class="space-y-4 text-xs">
+        
+        <!-- Promo Badge Free 30 Hari -->
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center space-x-2.5 text-emerald-950">
+          <span class="text-2xl">🎁</span>
+          <div>
+            <div class="font-bold text-xs text-emerald-900">Promo Spesial Pendaftar Baru!</div>
+            <div class="text-[11px] text-emerald-800">Otomatis dapat <strong>Gratis 1 Bulan (30 Hari)</strong> akses penuh semua fitur kasir & asisten AI.</div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nama Toko / Usaha:</label>
+          <input type="text" id="reg-store-name" required placeholder="Contoh: Toko Berkah Barokah / Warung Bu Hendro" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-emerald-500 font-bold">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Jenis Usaha:</label>
+          <select id="reg-business-type" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-emerald-500 font-medium">
+            <option value="Sembako & Kebutuhan Harian">Sembako & Kebutuhan Harian</option>
+            <option value="Warung Makan & Kuliner">Warung Makan & Kuliner</option>
+            <option value="Toko Pakaian & Fashion">Toko Pakaian & Fashion</option>
+            <option value="Konter Pulsa & Aksesoris HP">Konter Pulsa & Aksesoris HP</option>
+            <option value="Toko Bangunan & Perkakas">Toko Bangunan & Perkakas</option>
+            <option value="Bengkel & Sparepart">Bengkel & Sparepart</option>
+            <option value="Reseller & Toko Online">Reseller & Toko Online</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nomor WhatsApp Aktif:</label>
+            <input type="tel" id="reg-phone" required placeholder="08123456789" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-emerald-500 font-mono">
+            <span class="text-[10px] text-slate-400">1 Nomor HP untuk 1 Akun Toko</span>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Alamat Email:</label>
+            <input type="email" id="reg-email" required placeholder="pemilik@gmail.com" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-emerald-500 font-mono">
+            <span class="text-[10px] text-slate-400">1 Email untuk 1 Akun Toko</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Password with Eye Toggle -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Password:</label>
+            <div class="relative">
+              <input type="password" id="reg-pass" required minlength="6" placeholder="Minimal 6 karakter" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-emerald-500 pr-10">
+              <button type="button" onclick="togglePasswordVisibility('reg-pass', 'reg-eye-icon-1')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none">
+                <span id="reg-eye-icon-1">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Confirm Password with Eye Toggle -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Konfirmasi Password:</label>
+            <div class="relative">
+              <input type="password" id="reg-pass-confirm" required minlength="6" placeholder="Ulangi password" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-emerald-500 pr-10">
+              <button type="button" onclick="togglePasswordVisibility('reg-pass-confirm', 'reg-eye-icon-2')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none">
+                <span id="reg-eye-icon-2">👁️</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-colors shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-2">
+          <span>🚀</span>
+          <span>Daftarkan Toko & Mulai 30 Hari Gratis</span>
+        </button>
+      </form>
+
+      <!-- FORM 2: MASUK / LOGIN -->
+      <form id="form-login-store" onsubmit="handleLoginSubmit(event)" class="hidden space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Email atau Nomor WhatsApp:</label>
+          <input type="text" id="login-identifier" required placeholder="Masukkan email atau no HP terdaftar" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-emerald-500 font-medium">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Password:</label>
+          <div class="relative">
+            <input type="password" id="login-pass" required placeholder="Masukkan password Anda" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-emerald-500 pr-10">
+            <button type="button" onclick="togglePasswordVisibility('login-pass', 'login-eye-icon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none">
+              <span id="login-eye-icon">👁️</span>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs transition-colors shadow-md flex items-center justify-center space-x-2">
+          <span>🔑</span>
+          <span>Masuk ke Toko Saya</span>
+        </button>
+
+        <div class="text-center pt-2">
+          <button type="button" onclick="closeAuthModal()" class="text-xs text-slate-500 hover:text-emerald-700 underline font-medium">
+            Atau gunakan mode demo terlebih dahulu
+          </button>
+        </div>
+      </form>
+
+      <!-- Pricing Info in Auth Modal -->
+      <div class="pt-4 border-t border-slate-100 text-center text-[11px] text-slate-500">
+        Tarif perpanjangan sewa: <strong>Rp 20.000 – Rp 30.000 / bulan</strong> (tanpa biaya tersembunyi).
+      </div>
+    </div>
+  </div>
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="./src/firebase.js"></script>
   <!-- Embedded Application Logic -->
   <script src="./src/app.js"></script>

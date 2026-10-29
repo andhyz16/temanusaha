@@ -181,6 +181,23 @@ const DEFAULT_TRANSACTIONS = [
 ];
 
 // ==================== STATE MANAGEMENT ====================
+const DEFAULT_STORE_PROFILE = {
+  name: 'Toko Berkah Barokah',
+  type: 'Sembako & Kebutuhan Harian',
+  phone: '08123456789',
+  address: 'Pasar Induk Blok A No. 12',
+  logo: '🏪',
+  email: 'pemilik@toko.com'
+};
+
+const DEFAULT_SUBSCRIPTION = {
+  plan: 'trial',
+  planName: 'Masa Uji Coba Gratis (30 Hari)',
+  status: 'active',
+  startDate: new Date().toISOString(),
+  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+};
+
 let state = {
   initialCash: 1250000,
   products: [],
@@ -191,6 +208,14 @@ let state = {
   inventoryFilter: 'all',
   selectedCustomerForWa: null,
   activeRestockProductId: null,
+  storeProfile: { ...DEFAULT_STORE_PROFILE },
+  subscription: { ...DEFAULT_SUBSCRIPTION },
+  currentUser: null,
+  currentPaymentPlan: {
+    id: '6_months',
+    name: 'Paket Hemat (6 Bulan)',
+    amount: 150000
+  },
   chatHistory: [
     {
       sender: 'ai',
@@ -234,11 +259,22 @@ function initApp() {
       state.customers = parsed.customers || DEFAULT_CUSTOMERS;
       state.transactions = parsed.transactions || DEFAULT_TRANSACTIONS;
       state.chatHistory = parsed.chatHistory || state.chatHistory;
+      if (parsed.storeProfile) state.storeProfile = { ...DEFAULT_STORE_PROFILE, ...parsed.storeProfile };
+      if (parsed.subscription) state.subscription = { ...DEFAULT_SUBSCRIPTION, ...parsed.subscription };
+      if (parsed.currentUser) state.currentUser = parsed.currentUser;
     } catch (e) {
       loadDefaultData();
     }
   } else {
     loadDefaultData();
+  }
+
+  // Muat akun login aktif jika ada
+  const activeUser = localStorage.getItem('temanusaha_active_user');
+  if (activeUser) {
+    try {
+      state.currentUser = JSON.parse(activeUser);
+    } catch (e) {}
   }
 
   // Set default due date to tomorrow
@@ -265,7 +301,8 @@ function connectFirestoreSync() {
     return;
   }
 
-  const storeDocRef = db.collection('stores').doc('toko-berkah');
+  const storeDocId = (state.currentUser && state.currentUser.storeId) ? state.currentUser.storeId : 'toko-berkah';
+  const storeDocRef = db.collection('stores').doc(storeDocId);
 
   // Real-time listener dari Firestore Cloud
   unsubscribeFirestore = storeDocRef.onSnapshot((doc) => {
@@ -276,6 +313,8 @@ function connectFirestoreSync() {
       state.customers = data.customers || state.customers;
       state.transactions = data.transactions || state.transactions;
       state.chatHistory = data.chatHistory || state.chatHistory;
+      if (data.storeProfile) state.storeProfile = { ...state.storeProfile, ...data.storeProfile };
+      if (data.subscription) state.subscription = { ...state.subscription, ...data.subscription };
 
       // Update local storage juga
       localStorage.setItem('temanusaha_db_v1', JSON.stringify({
@@ -283,7 +322,10 @@ function connectFirestoreSync() {
         products: state.products,
         customers: state.customers,
         transactions: state.transactions,
-        chatHistory: state.chatHistory
+        chatHistory: state.chatHistory,
+        storeProfile: state.storeProfile,
+        subscription: state.subscription,
+        currentUser: state.currentUser
       }));
 
       setCloudStatus('connected', 'Firebase Terhubung ✓');
@@ -296,6 +338,8 @@ function connectFirestoreSync() {
         customers: state.customers,
         transactions: state.transactions,
         chatHistory: state.chatHistory,
+        storeProfile: state.storeProfile,
+        subscription: state.subscription,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         setCloudStatus('connected', 'Firebase Terhubung ✓');
@@ -314,6 +358,8 @@ function loadDefaultData() {
   state.products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
   state.customers = JSON.parse(JSON.stringify(DEFAULT_CUSTOMERS));
   state.transactions = JSON.parse(JSON.stringify(DEFAULT_TRANSACTIONS));
+  state.storeProfile = { ...DEFAULT_STORE_PROFILE };
+  state.subscription = { ...DEFAULT_SUBSCRIPTION };
   saveState();
 }
 
@@ -323,7 +369,10 @@ function saveState() {
     products: state.products,
     customers: state.customers,
     transactions: state.transactions,
-    chatHistory: state.chatHistory
+    chatHistory: state.chatHistory,
+    storeProfile: state.storeProfile,
+    subscription: state.subscription,
+    currentUser: state.currentUser
   };
 
   // Simpan ke LocalStorage seketika
@@ -332,7 +381,8 @@ function saveState() {
   // Simpan ke Firebase Firestore secara asinkron
   if (typeof isFirebaseReady !== 'undefined' && isFirebaseReady && db) {
     setCloudStatus('syncing', 'Menyimpan...');
-    db.collection('stores').doc('toko-berkah').set({
+    const storeDocId = (state.currentUser && state.currentUser.storeId) ? state.currentUser.storeId : 'toko-berkah';
+    db.collection('stores').doc(storeDocId).set({
       ...payload,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true })
@@ -503,6 +553,8 @@ function renderAll() {
   renderInventory(metrics);
   renderDebts(metrics);
   renderMarketingOptions();
+  renderStoreProfile();
+  updateSubscriptionUI();
 }
 
 // ==================== TAB 1: RENDER DASHBOARD ====================
@@ -1601,7 +1653,7 @@ function selectMenu(tabId) {
 
 function switchTab(tabId) {
   state.activeTab = tabId;
-  const tabs = ['dashboard', 'cashier', 'inventory', 'debts', 'pricing', 'assistant', 'marketing'];
+  const tabs = ['dashboard', 'cashier', 'inventory', 'debts', 'pricing', 'assistant', 'marketing', 'subscription', 'settings'];
   const titles = {
     dashboard: '📊 Kondisi Usaha',
     cashier: '⚡ Catat Cepat',
@@ -1609,7 +1661,9 @@ function switchTab(tabId) {
     debts: '📒 Buku Piutang',
     pricing: '🏷️ Kalkulator Harga',
     assistant: '💬 Tanya TemanUsaha',
-    marketing: '📢 Ide Promosi'
+    marketing: '📢 Ide Promosi',
+    subscription: '💳 Perpanjang Sewa Aplikasi',
+    settings: '⚙️ Pengaturan Toko & Akun'
   };
 
   const pillTitle = document.getElementById('header-active-page-title');
@@ -1635,6 +1689,401 @@ function switchTab(tabId) {
 
   if (tabId === 'assistant') {
     renderChatHistory();
+  }
+}
+
+// ==================== IDENTITAS TOKO & PROFIL ====================
+function renderStoreProfile() {
+  const profile = state.storeProfile || DEFAULT_STORE_PROFILE;
+
+  // Header
+  const headerLogo = document.getElementById('header-store-logo');
+  if (headerLogo) headerLogo.innerText = profile.logo || '🏪';
+
+  const storeTitle = document.getElementById('store-title');
+  if (storeTitle) storeTitle.innerText = `${profile.name} • ${profile.type}`;
+
+  const userBtnLabel = document.getElementById('header-user-btn-label');
+  if (userBtnLabel) {
+    userBtnLabel.innerText = state.currentUser ? (profile.name.length > 12 ? profile.name.substring(0, 12) + '...' : profile.name) : 'Daftar / Masuk';
+  }
+
+  // Drawer
+  const drawerLogo = document.getElementById('drawer-store-logo');
+  if (drawerLogo) drawerLogo.innerText = profile.logo || '🏪';
+
+  const drawerName = document.getElementById('drawer-store-name');
+  if (drawerName) drawerName.innerText = profile.name;
+
+  const drawerType = document.getElementById('drawer-business-type');
+  if (drawerType) drawerType.innerText = profile.type;
+
+  const drawerPhone = document.getElementById('drawer-user-phone');
+  if (drawerPhone) {
+    drawerPhone.innerText = state.currentUser ? (state.currentUser.phone || state.currentUser.email || 'Akun Aktif') : 'Mode Demo';
+  }
+
+  // Settings Tab
+  const settingsLogo = document.getElementById('settings-logo-preview');
+  if (settingsLogo) settingsLogo.innerText = profile.logo || '🏪';
+
+  const settingsName = document.getElementById('settings-store-name');
+  if (settingsName && document.activeElement !== settingsName) settingsName.value = profile.name;
+
+  const settingsType = document.getElementById('settings-business-type');
+  if (settingsType && document.activeElement !== settingsType) settingsType.value = profile.type;
+
+  const settingsPhone = document.getElementById('settings-store-phone');
+  if (settingsPhone && document.activeElement !== settingsPhone) settingsPhone.value = profile.phone;
+
+  const settingsAddress = document.getElementById('settings-store-address');
+  if (settingsAddress && document.activeElement !== settingsAddress) settingsAddress.value = profile.address || '';
+
+  const settingsEmail = document.getElementById('settings-account-email');
+  if (settingsEmail) settingsEmail.value = profile.email || (state.currentUser ? state.currentUser.email : 'pemilik@toko.com');
+}
+
+function selectStoreLogo(emoji) {
+  if (!state.storeProfile) state.storeProfile = { ...DEFAULT_STORE_PROFILE };
+  state.storeProfile.logo = emoji;
+  saveState();
+  renderStoreProfile();
+}
+
+function saveStoreProfileSettings() {
+  const nameEl = document.getElementById('settings-store-name');
+  const typeEl = document.getElementById('settings-business-type');
+  const phoneEl = document.getElementById('settings-store-phone');
+  const addressEl = document.getElementById('settings-store-address');
+
+  if (!nameEl || !nameEl.value.trim()) {
+    alert('Nama toko tidak boleh kosong!');
+    return;
+  }
+
+  if (!state.storeProfile) state.storeProfile = { ...DEFAULT_STORE_PROFILE };
+  state.storeProfile.name = nameEl.value.trim();
+  state.storeProfile.type = typeEl ? typeEl.value : state.storeProfile.type;
+  state.storeProfile.phone = phoneEl ? phoneEl.value.trim() : state.storeProfile.phone;
+  state.storeProfile.address = addressEl ? addressEl.value.trim() : state.storeProfile.address;
+
+  saveState();
+  renderStoreProfile();
+  alert('✅ Profil toko berhasil diperbarui!');
+}
+
+function handleChangePassword() {
+  const newPass = document.getElementById('settings-new-pass');
+  const confirmPass = document.getElementById('settings-confirm-pass');
+
+  if (!newPass || !newPass.value) {
+    alert('Silakan masukkan password baru!');
+    return;
+  }
+
+  if (newPass.value.length < 6) {
+    alert('Password baru minimal 6 karakter!');
+    return;
+  }
+
+  if (newPass.value !== confirmPass.value) {
+    alert('Konfirmasi password tidak cocok! Silakan periksa kembali.');
+    return;
+  }
+
+  // Update password in local accounts
+  if (state.currentUser && state.currentUser.email) {
+    try {
+      const rawAccounts = localStorage.getItem('temanusaha_registered_accounts') || '[]';
+      const accounts = JSON.parse(rawAccounts);
+      const accIndex = accounts.findIndex(a => a.email === state.currentUser.email || a.phone === state.currentUser.phone);
+      if (accIndex !== -1) {
+        accounts[accIndex].password = newPass.value;
+        localStorage.setItem('temanusaha_registered_accounts', JSON.stringify(accounts));
+      }
+    } catch (e) {}
+  }
+
+  newPass.value = '';
+  confirmPass.value = '';
+  alert('🔑 Password berhasil diperbarui!');
+}
+
+// ==================== MASA AKTIF & PERPANJANGAN SEWA ====================
+function updateSubscriptionUI() {
+  if (!state.subscription || !state.subscription.expiresAt) {
+    state.subscription = { ...DEFAULT_SUBSCRIPTION };
+  }
+
+  const expiresTime = new Date(state.subscription.expiresAt).getTime();
+  const now = Date.now();
+  const diffMs = expiresTime - now;
+  const remainingDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  const isExpired = remainingDays <= 0;
+
+  // Format expiry date (contoh: 28 Nov 2026)
+  const expiryDateObj = new Date(state.subscription.expiresAt);
+  const formattedExpiry = expiryDateObj.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  // Header Badge
+  const headerSubText = document.getElementById('header-subscription-text');
+  if (headerSubText) {
+    if (isExpired) {
+      headerSubText.innerText = 'Sewa Habis';
+    } else if (state.subscription.plan === 'trial') {
+      headerSubText.innerText = `Trial ${remainingDays} Hari`;
+    } else {
+      headerSubText.innerText = `Aktif ${remainingDays} Hari`;
+    }
+  }
+
+  // Drawer Badge
+  const drawerSubStatus = document.getElementById('drawer-sub-status');
+  if (drawerSubStatus) {
+    if (isExpired) {
+      drawerSubStatus.innerText = 'Masa Sewa Habis';
+      drawerSubStatus.className = 'font-bold text-red-300 text-[11px]';
+    } else if (state.subscription.plan === 'trial') {
+      drawerSubStatus.innerText = `Trial ${remainingDays} Hari Aktif`;
+      drawerSubStatus.className = 'font-bold text-amber-300 text-[11px]';
+    } else {
+      drawerSubStatus.innerText = `Langganan Aktif (${remainingDays} Hari)`;
+      drawerSubStatus.className = 'font-bold text-emerald-200 text-[11px]';
+    }
+  }
+
+  const drawerBadgeSub = document.getElementById('drawer-badge-sub');
+  if (drawerBadgeSub) {
+    drawerBadgeSub.innerText = isExpired ? 'Habis' : (state.subscription.plan === 'trial' ? 'Trial' : 'Premium');
+  }
+
+  // Tab 8 Elements
+  const subCardBadge = document.getElementById('sub-card-badge');
+  if (subCardBadge) {
+    subCardBadge.innerText = isExpired ? 'Masa Sewa Habis' : (state.subscription.plan === 'trial' ? 'Masa Uji Coba Gratis (Free 1 Bulan)' : 'Paket Langganan Aktif');
+  }
+
+  const subRemainingDays = document.getElementById('sub-remaining-days');
+  if (subRemainingDays) {
+    subRemainingDays.innerText = `${remainingDays} Hari`;
+  }
+
+  const subExpiryDate = document.getElementById('sub-expiry-date');
+  if (subExpiryDate) {
+    subExpiryDate.innerText = `Aktif sampai ${formattedExpiry}`;
+  }
+}
+
+function openPaymentModal(planId, planName, amount) {
+  state.currentPaymentPlan = { id: planId, name: planName, amount: amount };
+
+  const titleEl = document.getElementById('pay-modal-title');
+  if (titleEl) titleEl.innerText = planName;
+
+  const amountEl = document.getElementById('pay-modal-amount');
+  if (amountEl) amountEl.innerText = formatRupiah(amount);
+
+  const modal = document.getElementById('modal-payment');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closePaymentModal() {
+  const modal = document.getElementById('modal-payment');
+  if (modal) modal.classList.add('hidden');
+}
+
+function copyPaymentNumber() {
+  const numEl = document.getElementById('pay-account-number');
+  const text = numEl ? numEl.innerText.trim() : '123-456-7890';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Nomor rekening/virtual account berhasil disalin: ' + text);
+    });
+  } else {
+    alert('Nomor rekening/virtual account: ' + text);
+  }
+}
+
+function confirmPaymentWhatsApp() {
+  const plan = state.currentPaymentPlan || { name: 'Paket Sewa', amount: 150000 };
+  const store = state.storeProfile || DEFAULT_STORE_PROFILE;
+  const user = state.currentUser || {};
+
+  const message = `Halo Admin TemanUsaha, saya telah melakukan transfer untuk perpanjangan sewa aplikasi:\n\n• Nama Toko: ${store.name}\n• Paket: ${plan.name}\n• Nominal: ${formatRupiah(plan.amount)}\n• No HP / Email: ${user.phone || store.phone || user.email || '-'}\n\nMohon dicek dan diperpanjang masa aktif akun toko saya. Terima kasih!`;
+
+  const url = `https://api.whatsapp.com/send?phone=6281234567890&text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+  closePaymentModal();
+}
+
+function contactAdminWhatsApp(subject) {
+  const message = `Halo Admin TemanUsaha, saya butuh informasi seputar: ${subject || 'Aplikasi TemanUsaha'}.`;
+  const url = `https://api.whatsapp.com/send?phone=6281234567890&text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+// ==================== AUTH PORTAL (DAFTAR & MASUK) ====================
+function openAuthModal() {
+  const modal = document.getElementById('auth-portal-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  closeSideMenu();
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('auth-portal-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+}
+
+function switchAuthMode(mode) {
+  const regTab = document.getElementById('auth-tab-reg');
+  const loginTab = document.getElementById('auth-tab-login');
+  const regForm = document.getElementById('form-register-store');
+  const loginForm = document.getElementById('form-login-store');
+
+  if (mode === 'register') {
+    if (regTab) regTab.className = 'py-2.5 rounded-lg bg-white text-emerald-800 shadow-sm transition-all flex items-center justify-center space-x-1.5';
+    if (loginTab) loginTab.className = 'py-2.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center space-x-1.5';
+    if (regForm) regForm.classList.remove('hidden');
+    if (loginForm) loginForm.classList.add('hidden');
+  } else {
+    if (regTab) regTab.className = 'py-2.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center space-x-1.5';
+    if (loginTab) loginTab.className = 'py-2.5 rounded-lg bg-white text-emerald-800 shadow-sm transition-all flex items-center justify-center space-x-1.5';
+    if (regForm) regForm.classList.add('hidden');
+    if (loginForm) loginForm.classList.remove('hidden');
+  }
+}
+
+function handleRegisterSubmit(event) {
+  if (event) event.preventDefault();
+
+  const storeName = document.getElementById('reg-store-name').value.trim();
+  const businessType = document.getElementById('reg-business-type').value;
+  const phone = document.getElementById('reg-phone').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pass = document.getElementById('reg-pass').value;
+  const passConfirm = document.getElementById('reg-pass-confirm').value;
+
+  if (pass.length < 6) {
+    alert('Password minimal 6 karakter!');
+    return;
+  }
+
+  if (pass !== passConfirm) {
+    alert('Konfirmasi password tidak cocok dengan password yang dimasukkan!');
+    return;
+  }
+
+  // Cek aturan: 1 nomor HP dan 1 email untuk 1 akun
+  let accounts = [];
+  try {
+    const raw = localStorage.getItem('temanusaha_registered_accounts');
+    if (raw) accounts = JSON.parse(raw);
+  } catch (e) {
+    accounts = [];
+  }
+
+  const existingPhone = accounts.find(a => a.phone === phone);
+  if (existingPhone) {
+    alert('Nomor WhatsApp ini sudah terdaftar! 1 nomor HP hanya untuk 1 akun toko. Silakan gunakan menu Masuk Toko.');
+    switchAuthMode('login');
+    return;
+  }
+
+  const existingEmail = accounts.find(a => a.email === email);
+  if (existingEmail) {
+    alert('Alamat email ini sudah terdaftar! 1 email hanya untuk 1 akun toko. Silakan gunakan menu Masuk Toko.');
+    switchAuthMode('login');
+    return;
+  }
+
+  // Buat akun baru dengan Free Trial 1 Bulan (30 Hari)
+  const storeId = 'store-' + Date.now();
+  const trialExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const newAccount = {
+    storeId: storeId,
+    storeName: storeName,
+    businessType: businessType,
+    phone: phone,
+    email: email,
+    password: pass,
+    createdAt: new Date().toISOString()
+  };
+
+  accounts.push(newAccount);
+  localStorage.setItem('temanusaha_registered_accounts', JSON.stringify(accounts));
+  localStorage.setItem('temanusaha_active_user', JSON.stringify(newAccount));
+
+  state.currentUser = newAccount;
+  state.storeProfile = {
+    name: storeName,
+    type: businessType,
+    phone: phone,
+    address: 'Alamat Toko Belum Diatur',
+    logo: '🏪',
+    email: email
+  };
+  state.subscription = {
+    plan: 'trial',
+    planName: 'Masa Uji Coba Gratis (30 Hari)',
+    status: 'active',
+    startDate: new Date().toISOString(),
+    expiresAt: trialExpires
+  };
+
+  saveState();
+  closeAuthModal();
+  renderAll();
+
+  alert(`🎉 Selamat! Toko "${storeName}" berhasil didaftarkan.\n\nAnda mendapatkan GRATIS 1 BULAN (30 Hari) masa sewa aplikasi TemanUsaha dengan akses semua fitur kasir dan asisten cerdas.`);
+}
+
+function handleLoginSubmit(event) {
+  if (event) event.preventDefault();
+
+  const identifier = document.getElementById('login-identifier').value.trim().toLowerCase();
+  const pass = document.getElementById('login-pass').value;
+
+  let accounts = [];
+  try {
+    const raw = localStorage.getItem('temanusaha_registered_accounts');
+    if (raw) accounts = JSON.parse(raw);
+  } catch (e) {
+    accounts = [];
+  }
+
+  const matched = accounts.find(a => (a.email.toLowerCase() === identifier || a.phone === identifier) && a.password === pass);
+
+  if (matched) {
+    state.currentUser = matched;
+    localStorage.setItem('temanusaha_active_user', JSON.stringify(matched));
+    state.storeProfile.name = matched.storeName || state.storeProfile.name;
+    state.storeProfile.type = matched.businessType || state.storeProfile.type;
+    state.storeProfile.phone = matched.phone || state.storeProfile.phone;
+    state.storeProfile.email = matched.email || state.storeProfile.email;
+
+    saveState();
+    closeAuthModal();
+    renderAll();
+    alert(`👋 Selamat datang kembali di Toko "${matched.storeName}"!`);
+  } else {
+    alert('Email/No WhatsApp atau Password salah! Periksa kembali atau daftar akun baru.');
+  }
+}
+
+function handleLogout() {
+  if (confirm('Apakah Anda yakin ingin keluar dari akun toko saat ini?')) {
+    state.currentUser = null;
+    localStorage.removeItem('temanusaha_active_user');
+    state.storeProfile = { ...DEFAULT_STORE_PROFILE };
+    renderAll();
+    alert('Anda telah keluar dari akun. Aplikasi kini berada dalam mode demo simulasi.');
   }
 }
 
