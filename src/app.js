@@ -469,29 +469,32 @@ function computeMetrics() {
 function renderAll() {
   const metrics = computeMetrics();
 
-  // Top header pill
+  // Top header pill & Drawer cash pill
   const headerCash = document.getElementById('header-cash-in-hand');
   if (headerCash) headerCash.innerText = formatRupiah(metrics.cashInHand);
 
-  // Badges
+  const drawerCash = document.getElementById('drawer-cash-in-hand');
+  if (drawerCash) drawerCash.innerText = formatRupiah(metrics.cashInHand);
+
+  // Badges (Header & Drawer)
   const badgeCrit = document.getElementById('badge-critical-stock');
-  if (badgeCrit) {
-    if (metrics.criticalItems.length > 0) {
-      badgeCrit.innerText = metrics.criticalItems.length;
-      badgeCrit.classList.remove('hidden');
-    } else {
-      badgeCrit.classList.add('hidden');
-    }
+  const drawerCrit = document.getElementById('drawer-badge-critical');
+  if (metrics.criticalItems.length > 0) {
+    if (badgeCrit) { badgeCrit.innerText = metrics.criticalItems.length; badgeCrit.classList.remove('hidden'); }
+    if (drawerCrit) { drawerCrit.innerText = `${metrics.criticalItems.length} Kritis`; drawerCrit.classList.remove('hidden'); }
+  } else {
+    if (badgeCrit) badgeCrit.classList.add('hidden');
+    if (drawerCrit) drawerCrit.classList.add('hidden');
   }
 
   const badgeDebt = document.getElementById('badge-urgent-debt');
-  if (badgeDebt) {
-    if (metrics.urgentDebts.length > 0) {
-      badgeDebt.innerText = metrics.urgentDebts.length;
-      badgeDebt.classList.remove('hidden');
-    } else {
-      badgeDebt.classList.add('hidden');
-    }
+  const drawerDebt = document.getElementById('drawer-badge-debt');
+  if (metrics.urgentDebts.length > 0) {
+    if (badgeDebt) { badgeDebt.innerText = metrics.urgentDebts.length; badgeDebt.classList.remove('hidden'); }
+    if (drawerDebt) { drawerDebt.innerText = `${metrics.urgentDebts.length} Bon`; drawerDebt.classList.remove('hidden'); }
+  } else {
+    if (badgeDebt) badgeDebt.classList.add('hidden');
+    if (drawerDebt) drawerDebt.classList.add('hidden');
   }
 
   renderDashboard(metrics);
@@ -1566,21 +1569,56 @@ function sharePromoWhatsApp() {
   window.open(url, '_blank');
 }
 
-// ==================== NAVIGASI TAB ====================
+// ==================== NAVIGASI TAB & MENU GARIS TIGA ====================
+function toggleSideMenu() {
+  const drawer = document.getElementById('sidebar-drawer');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (!drawer || !overlay) return;
+
+  const isOpen = !drawer.classList.contains('-translate-x-full');
+  if (isOpen) {
+    closeSideMenu();
+  } else {
+    drawer.classList.remove('-translate-x-full');
+    overlay.classList.remove('opacity-0', 'pointer-events-none');
+    overlay.classList.add('opacity-100', 'pointer-events-auto');
+    document.body.classList.add('overflow-hidden');
+  }
+}
+
+function closeSideMenu() {
+  const drawer = document.getElementById('sidebar-drawer');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (!drawer || !overlay) return;
+
+  drawer.classList.add('-translate-x-full');
+  overlay.classList.remove('opacity-100', 'pointer-events-auto');
+  overlay.classList.add('opacity-0', 'pointer-events-none');
+  document.body.classList.remove('overflow-hidden');
+}
+
+function selectMenu(tabId) {
+  switchTab(tabId);
+  closeSideMenu();
+}
+
 function switchTab(tabId) {
   state.activeTab = tabId;
   const tabs = ['dashboard', 'cashier', 'inventory', 'debts', 'pricing', 'assistant', 'marketing'];
 
   tabs.forEach(t => {
     const section = document.getElementById(`tab-${t}`);
-    const btn = document.getElementById(`tab-btn-${t}`);
+    const topBtn = document.getElementById(`tab-btn-${t}`);
+    const drawerBtn = document.getElementById(`drawer-btn-${t}`);
 
     if (t === tabId) {
-      section.classList.remove('hidden');
-      btn.className = 'tab-btn py-2.5 px-3 rounded-none border-b-2 border-emerald-600 text-emerald-700 font-bold flex items-center space-x-1.5 whitespace-nowrap';
+      if (section) section.classList.remove('hidden');
+      if (topBtn) topBtn.className = 'tab-btn py-2.5 px-3 rounded-none border-b-2 border-emerald-600 text-emerald-700 font-bold flex items-center space-x-1.5 whitespace-nowrap';
+      if (drawerBtn) drawerBtn.className = 'w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/60 shadow-sm';
     } else {
-      section.classList.add('hidden');
-      btn.className = 'tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap';
+      if (section) section.classList.add('hidden');
+      if (topBtn) topBtn.className = 'tab-btn py-2.5 px-3 rounded-none border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-1.5 whitespace-nowrap';
+      if (drawerBtn) drawerBtn.className = 'w-full flex items-center justify-between p-3 rounded-xl transition-all text-left group hover:bg-slate-50 text-slate-700 font-semibold border border-transparent';
     }
   });
 
